@@ -1,1 +1,1 @@
-# solitaire_real_time_search_eecs592
+# EECS592 Course Project: Searching Solitaire in Real Time
