@@ -13,7 +13,7 @@ def deckGen1():
     Deck = []
     for i in Suits:
         for j in Elements:
-            Deck.append((i,j))
+            Deck.append([i,j])
     random.shuffle(Deck)
     return Deck
 
@@ -27,11 +27,11 @@ def deckGen2():
 
 
 def reachableTalonGen(Deck):
-    reachableTalon = deque(Deck[27:46])
+    reachableTalon = deque(Deck[27:43])
     return reachableTalon
 
 def unreachableTalonGen(Deck):
-    unreachableTalon = deque(Deck[46:51])
+    unreachableTalon = deque(Deck[43:51])
     return unreachableTalon
 
 def foundationGen():
@@ -43,13 +43,13 @@ def foundationGen():
     return Foundation
 
 def tableauGen(Deck):
-    tableau1 = [deque(Deck[0]), deque([])] #first array for face up, second array for face down 
-    tableau2 = [deque(Deck[1]), deque(Deck[2])]
-    tableau3 = [deque(Deck[3]), deque(Deck[4:6])]
-    tableau4 = [deque(Deck[6]), deque(Deck[7:10])]
-    tableau5 = [deque(Deck[10]), deque(Deck[11:15])]
-    tableau6 = [deque(Deck[15]), deque(Deck[15:20])]
-    tableau7 = [deque(Deck[20]), deque(Deck[21:27])]
+    tableau1 = [deque([Deck[0]]), deque([])] #first array for face up, second array for face down 
+    tableau2 = [deque([Deck[1]]), deque([Deck[2]])]
+    tableau3 = [deque([Deck[3]]), deque(Deck[4:6])]
+    tableau4 = [deque([Deck[6]]), deque(Deck[7:10])]
+    tableau5 = [deque([Deck[10]]), deque(Deck[11:15])]
+    tableau6 = [deque([Deck[15]]), deque(Deck[15:20])]
+    tableau7 = [deque([Deck[20]]), deque(Deck[21:27])]
     Tableau = [tableau1,tableau2,tableau3,tableau4,tableau5,tableau6,tableau7]
     return Tableau
 
@@ -62,8 +62,13 @@ def printDeck(tableau,foundation,reachable_talon,unreachable_talon):
 def printDeckLength(tableau,foundation,reachable_talon,unreachable_talon):
     tableauLength = []
     for tableau_stack in tableau:
-        print(tableau_stack[0])
-        print(tableau_stack[1])
+        #print(tableau_stack)
+        #print(tableau_stack[0])
+        #print(tableau_stack[1])
+        
+        #print(len(tableau_stack[0]))
+        #print(len(tableau_stack[1]))
+ 
         tableauLength.append(len(tableau_stack[0])+len(tableau_stack[1]))
     foundationLength = []
     for foundation_stack in foundation:
@@ -73,3 +78,10 @@ def printDeckLength(tableau,foundation,reachable_talon,unreachable_talon):
     print("Reachable Talon: ", len(reachable_talon))
     print("Unreachable Talon: ", len(unreachable_talon))
     print("Total: ", sum(tableauLength)+sum(foundationLength)+len(reachable_talon)+len(unreachable_talon))
+
+#a function to make sure we have 52 unique cards
+def isUnique(tableau,foundation,reachable_talon,unreachable_talon):
+    isUnique = True
+    #TODO
+
+    return isUnique
