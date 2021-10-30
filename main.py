@@ -6,13 +6,25 @@ deck = deckGenerator.deckGen1()
 #print(deck)
 #print(len(deck))
 
+#initialize the game by partitioning the deck
 tableau = deckGenerator.tableauGen(deck)
 foundation = deckGenerator.foundationGen()
 reachable_talon = deckGenerator.reachableTalonGen(deck)
 unreachable_talon = deckGenerator.unreachableTalonGen(deck)
 
+#unique = deckGenerator.isUniqueDeck(deck)
+unique = deckGenerator.isUniqueStacks(tableau,foundation,reachable_talon,unreachable_talon)
+if not unique:
+    raise ValueError("ERROR Initializing: cards are not unique")
+
+
 deckGenerator.printDeck(tableau,foundation,reachable_talon,unreachable_talon)
 deckGenerator.printDeckLength(tableau,foundation,reachable_talon,unreachable_talon)
+
+
+
+
+
 
 #Load up our classes
 

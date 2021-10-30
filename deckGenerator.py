@@ -7,7 +7,10 @@ from collections import deque
 # #I have implemented both, we can just copy the values of one into the final code to reduce computational complexity
 
 Suits = ["S", "C", "H", "D"]
-Elements = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"]
+#Ace is 1, Jack is 11, Queen is 12, King is 13
+#numbers will make comparisons easier later on
+Elements = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+
 
 def deckGen1():
     Deck = []
@@ -27,11 +30,11 @@ def deckGen2():
 
 
 def reachableTalonGen(Deck):
-    reachableTalon = deque(Deck[27:43])
+    reachableTalon = deque(Deck[28:44])
     return reachableTalon
 
 def unreachableTalonGen(Deck):
-    unreachableTalon = deque(Deck[43:51])
+    unreachableTalon = deque(Deck[44:52])
     return unreachableTalon
 
 def foundationGen():
@@ -48,8 +51,8 @@ def tableauGen(Deck):
     tableau3 = [deque([Deck[3]]), deque(Deck[4:6])]
     tableau4 = [deque([Deck[6]]), deque(Deck[7:10])]
     tableau5 = [deque([Deck[10]]), deque(Deck[11:15])]
-    tableau6 = [deque([Deck[15]]), deque(Deck[15:20])]
-    tableau7 = [deque([Deck[20]]), deque(Deck[21:27])]
+    tableau6 = [deque([Deck[15]]), deque(Deck[16:21])]
+    tableau7 = [deque([Deck[21]]), deque(Deck[22:28])]
     Tableau = [tableau1,tableau2,tableau3,tableau4,tableau5,tableau6,tableau7]
     return Tableau
 
@@ -80,8 +83,90 @@ def printDeckLength(tableau,foundation,reachable_talon,unreachable_talon):
     print("Total: ", sum(tableauLength)+sum(foundationLength)+len(reachable_talon)+len(unreachable_talon))
 
 #a function to make sure we have 52 unique cards
-def isUnique(tableau,foundation,reachable_talon,unreachable_talon):
+def isUniqueStacks(tableau,foundation,reachable_talon,unreachable_talon):
     isUnique = True
-    #TODO
+    deck = [] #to recreate the deck from the passed stacks
+    for tableau_stack in tableau:
+        for card in tableau_stack[0]:
+            deck.append(card)
+        for card in tableau_stack[1]:
+            deck.append(card)
+    
+    for foundation_stack in foundation:
+        for card in foundation_stack:
+            deck.append(card)
+    
+    for card in reachable_talon:
+        deck.append(card)
 
+    for card in unreachable_talon:
+        deck.append(card)
+
+    
+    for value in range(1,13,1): #range(start,end,step)
+        current_value_cards = []
+        for card in deck:
+            if card[1] == value:
+                current_value_cards.append(card)
+        
+        current_heart_cards = []
+        current_diamond_cards = []
+        current_spade_cards = []
+        current_club_cards = []
+        for card in current_value_cards:
+            if card[0] == 'H':
+                current_heart_cards.append(card)
+            elif card[0] == 'D':
+                current_diamond_cards.append(card)
+            elif card[0] == 'S':
+                current_spade_cards.append(card)
+            elif card[0] == 'C':
+                current_club_cards.append(card)
+            else:
+                print("ERROR: There is a card of unrecognized suit")
+        
+        if (len(current_heart_cards) != 1) or (len(current_diamond_cards) != 1) or (len(current_spade_cards) != 1) or (len(current_club_cards) != 1):
+            isUnique = False
+            print("ERROR: The cards are not unique at value of ", value)
+            print(current_value_cards)
+            return isUnique
+
+    
+    print("All cards are unique")
+    return isUnique
+
+
+def isUniqueDeck(deck):
+    isUnique = True
+    
+    for value in range(1,13,1): #range(start,end,step)
+        current_value_cards = []
+        for card in deck:
+            if card[1] == value:
+                current_value_cards.append(card)
+        
+        current_heart_cards = []
+        current_diamond_cards = []
+        current_spade_cards = []
+        current_club_cards = []
+        for card in current_value_cards:
+            if card[0] == 'H':
+                current_heart_cards.append(card)
+            elif card[0] == 'D':
+                current_diamond_cards.append(card)
+            elif card[0] == 'S':
+                current_spade_cards.append(card)
+            elif card[0] == 'C':
+                current_club_cards.append(card)
+            else:
+                print("ERROR: There is a card of unrecognized suit")
+        
+        if (len(current_heart_cards) != 1) or (len(current_diamond_cards) != 1) or (len(current_spade_cards) != 1) or (len(current_club_cards) != 1):
+            isUnique = False
+            print("ERROR: The cards are not unique at value of ", value)
+            print(current_value_cards)
+            return isUnique
+
+    
+    print("All cards are unique")
     return isUnique
