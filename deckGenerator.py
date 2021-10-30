@@ -27,11 +27,11 @@ def deckGen2():
 
 
 def reachableTalonGen(Deck):
-    reachableTalon = deque(Deck[27:46])
+    reachableTalon = deque(Deck[27:35])
     return reachableTalon
 
 def unreachableTalonGen(Deck):
-    unreachableTalon = deque(Deck[46:51])
+    unreachableTalon = deque(Deck[35:51])
     return unreachableTalon
 
 def foundationGen():
