@@ -111,7 +111,7 @@ def isUniqueStacks(tableau,foundation,reachable_talon,unreachable_talon):
     
     for value in range(1,13,1): #range(start,end,step)
         current_value_cards = []
-        for card in deck:
+        for card in deck: #card is one [suit,value]
             if card[1] == value:
                 current_value_cards.append(card)
         
