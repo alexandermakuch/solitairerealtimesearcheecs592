@@ -69,7 +69,6 @@ def kplusTalon(Stock:deque,Talon:list = [0]):
     for x in range(int(sLen/3)):
         reachable.append(deque(Stock[3*x+2]))
     if (sLen % 3) != 0:
-        print("Non multiple of 3!")
         reachable.append(deque(Stock[sLen-1]))
 
     for x in range(len(Talon)):
@@ -80,7 +79,6 @@ def kplusTalon(Stock:deque,Talon:list = [0]):
     frompoint = 52
     for x in range(len(Talon)):
         if len(Talon[x]) != 3:
-            print("Uasdhofgdf")
             add = True
             frompoint = min(frompoint,x)
     
@@ -88,7 +86,6 @@ def kplusTalon(Stock:deque,Talon:list = [0]):
         for x in range(frompoint,int(sLen/3)):
             reachable.append(deque(Stock[3*x+1]))
         if (sLen % 3) != 0:
-            print("Non multiple of 3!")
             reachable.append(deque(Stock[sLen-2]))
 
     return reachable
