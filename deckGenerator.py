@@ -56,6 +56,7 @@ def turnstock(Stock:deque,Talon: list):
     Talon.append([Stock.popleft(), Stock.popleft(),Stock.popleft()][::-1])
     return Talon
 
+    
 def kplusTalon(Stock:deque,Talon:list = [0]):
     '''
     Inputs: Stock, Talon
