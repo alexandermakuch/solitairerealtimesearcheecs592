@@ -29,13 +29,10 @@ def deckGen2():
     return Deck
 
 
-def reachableTalonGen(Deck):
-    reachableTalon = deque(Deck[27:35])
-    return reachableTalon
 
-def unreachableTalonGen(Deck):
-    unreachableTalon = deque(Deck[35:51])
-    return unreachableTalon
+def StockGen(Deck):
+    Stock = deque(Deck[27:51])
+    return Stock
 
 def foundationGen():
     foundation1 = [] #for spades
@@ -55,6 +52,15 @@ def tableauGen(Deck):
     tableau7 = [deque([Deck[21]]), deque(Deck[22:28])]
     Tableau = [tableau1,tableau2,tableau3,tableau4,tableau5,tableau6,tableau7]
     return Tableau
+
+
+def turnstock(Stock:deque,Talon: list):
+    Talon.append([Stock.popleft(), Stock.popleft(),Stock.popleft()][::-1])
+    return Talon
+
+
+def reachableStockTalon(stock,talon):
+    pass
 
 def printDeck(tableau,foundation,reachable_talon,unreachable_talon):
     print("Tableau: ", tableau)
