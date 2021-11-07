@@ -28,8 +28,6 @@ def deckGen2():
     random.shuffle(Deck)
     return Deck
 
-
-
 def StockGen(Deck):
     Stock = deque(Deck[27:51])
     return Stock
@@ -58,9 +56,42 @@ def turnstock(Stock:deque,Talon: list):
     Talon.append([Stock.popleft(), Stock.popleft(),Stock.popleft()][::-1])
     return Talon
 
+def kplusTalon(Stock:deque,Talon:list = [0]):
+    '''
+    Inputs: Stock, Talon
+    Outputs: List of reachable states in Stock/Talon
+    '''
+    #First, we add every third card in the stock. These will always be reachable.
+    sLen = len(Stock)
+    tLen = len(Talon)
+    reachable = []
+    for x in range(int(sLen/3)):
+        reachable.append(deque(Stock[3*x+2]))
+    if (sLen % 3) != 0:
+        print("Non multiple of 3!")
+        reachable.append(deque(Stock[sLen-1]))
 
-def reachableStockTalon(stock,talon):
-    pass
+    for x in range(len(Talon)):
+        reachable.append(Talon[x][0])
+
+    #Next, we check if there are any lists in talon with length not equal to 3
+    add = False
+    frompoint = 52
+    for x in range(len(Talon)):
+        if len(Talon[x]) != 3:
+            print("Uasdhofgdf")
+            add = True
+            frompoint = min(frompoint,x)
+    
+    if add:
+        for x in range(frompoint,int(sLen/3)):
+            reachable.append(deque(Stock[3*x+1]))
+        if (sLen % 3) != 0:
+            print("Non multiple of 3!")
+            reachable.append(deque(Stock[sLen-2]))
+
+    return reachable
+
 
 def printDeck(tableau,foundation,reachable_talon,unreachable_talon):
     print("Tableau: ", tableau)
