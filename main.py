@@ -1,4 +1,4 @@
-import SolitaireClasses, deckGenerator, random, queue
+import SolitaireClasses, deckGenerator, reimplementation, random, queue
 import numpy as np
 
 #Generate a random deck of cards
@@ -21,8 +21,8 @@ if not unique:
 deckGenerator.printDeck(tableau,foundation,reachable_talon,unreachable_talon)
 deckGenerator.printDeckLength(tableau,foundation,reachable_talon,unreachable_talon)
 
-
-
+H1,H2 = reimplementation.HeuristicH1H2(tableau,foundation,reachable_talon,unreachable_talon)
+print(H1,H2)
 
 
 
