@@ -155,7 +155,7 @@ def deckGen2():
     return Deck
 
 def StockGen(Deck):
-    Stock = deque(Deck[28:52]) #Alex had 27:51, why?
+    Stock = deque(Deck[28:52])
     return Stock
 
 def foundationGen():
@@ -178,27 +178,34 @@ def tableauGen(Deck):
     return Tableau
 
 
-def turnstock(Stock:deque,Talon: list):
-    Talon.append([Stock.popleft(), Stock.popleft(),Stock.popleft()][::-1])
+def turnstock(Stock:deque,Talon:list):
+    Talon.append((deque([Stock.popleft(),Stock.popleft(),Stock.popleft()][::-1]))) #if we keep it like this, reversed, popleft is the proper way to remove from the talon. if we don't reverse we can just use pop instead
     return Talon
 
     
-def kplusTalon(Stock:deque,Talon:list = [0]):
+def kplusTalon(Stock:deque,Talon:list = []):
     '''
     Inputs: Stock, Talon
     Outputs: List of reachable states in Stock/Talon
     '''
     #First, we add every third card in the stock. These will always be reachable.
     sLen = len(Stock)
-    tLen = len(Talon)
-    reachable = []
-    for x in range(int(sLen/3)):
-        reachable.append(deque(Stock[3*x+2]))
-    if (sLen % 3) != 0:
-        reachable.append(deque(Stock[sLen-1]))
 
-    for x in range(len(Talon)):
-        reachable.append(Talon[x][0])
+    reachable = deque([])
+    unreachable = Stock.copy() #shallow copy of stock
+    unreachable.extend(Talon) #adding cards in talon, they'll be removed as we 
+
+    for x in range(int(sLen/3)):
+        reachable.append(Stock[3*x+2])
+        unreachable.remove(Stock[3*x+2])
+    if (sLen % 3) != 0:
+        reachable.append(Stock[sLen-1])
+        unreachable.remove(Stock[sLen-1])
+
+    if (len(Talon)) > 0:
+        for x in range(len(Talon)):
+            reachable.append(Talon[x][0])
+            unreachable.remove((Talon[x][0]))
 
     #Next, we check if there are any lists in talon with length not equal to 3
     add = False
@@ -210,9 +217,11 @@ def kplusTalon(Stock:deque,Talon:list = [0]):
     
     if add:
         for x in range(frompoint,int(sLen/3)):
-            reachable.append(deque(Stock[3*x+1]))
+            reachable.append(Stock[3*x+1])
+            unreachable.remove((Stock[3*x+1]))
         if (sLen % 3) != 0:
-            reachable.append(deque(Stock[sLen-2]))
+            reachable.append(Stock[sLen-2])
+            unreachable.remove(Stock[sLen-2])
 
     #if reachable becomes binary, would be good to just return the reachable_talon and unreachable_talon here anyway
-    return reachable
+    return reachable, unreachable
