@@ -1,4 +1,6 @@
 import SolitaireClasses, deckGenerator, reimplementation, random, queue
+from deckGenerator import State
+from collections import deque
 import numpy as np
 
 #Generate a random deck of cards
@@ -9,19 +11,22 @@ deck = deckGenerator.deckGen1()
 #initialize the game by partitioning the deck
 tableau = deckGenerator.tableauGen(deck)
 foundation = deckGenerator.foundationGen()
-reachable_talon = deckGenerator.reachableTalonGen(deck)
-unreachable_talon = deckGenerator.unreachableTalonGen(deck)
+stock = deckGenerator.StockGen(deck)
+talon = []
+reachable_talon, unreachable_talon = deckGenerator.kplusTalon(stock,talon)
+#unreachable_talon = deckGenerator.unreachableTalonGen(deck)
+
+s0 = State(tableau, foundation, reachable_talon, unreachable_talon)
 
 #unique = deckGenerator.isUniqueDeck(deck)
-unique = deckGenerator.isUniqueStacks(tableau,foundation,reachable_talon,unreachable_talon)
+unique = s0.isUniqueStacks()
 if not unique:
     raise ValueError("ERROR Initializing: cards are not unique")
 
+s0.printDeck()
+s0.printDeckLength()
 
-deckGenerator.printDeck(tableau,foundation,reachable_talon,unreachable_talon)
-deckGenerator.printDeckLength(tableau,foundation,reachable_talon,unreachable_talon)
-
-H1,H2 = reimplementation.HeuristicH1H2(tableau,foundation,reachable_talon,unreachable_talon)
+H1,H2 = s0.HeuristicH1H2()
 print(H1,H2)
 
 
