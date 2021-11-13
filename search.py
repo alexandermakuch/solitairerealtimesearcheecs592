@@ -58,13 +58,13 @@ def get_actions(s):
             if stack[0][0] == found_stack[0] and found_stack[1] - stack[0][1] == 1:
                 new_entry = {'from':[1,stack_idx,0], 'to':[2,found_idx]}
  #------------------------------------------------------------------------------------------------------- 
-        #See where foundation cards can be moved to
-        for stack_idx, stack in enumerate(s.foundation):
-            #Foundation to tableau
-            for tab_idx, tab_stack in enumerate(s.tableau):
-                if opp_color_check(stack[0][0], tab_stack[0][0]) and tab_stack[0][1] - stack[0][1] == 1:
-                    #Move card from foundation to end of a tableau stack
-                    new_entry = {'from':[2,stack_idx], 'to':[1,tab_idx,0]} 
+    #See where foundation cards can be moved to
+    for stack_idx, stack in enumerate(s.foundation):
+        #Foundation to tableau
+        for tab_idx, tab_stack in enumerate(s.tableau):
+            if opp_color_check(stack[0][0], tab_stack[0][0]) and tab_stack[0][1] - stack[0][1] == 1:
+                #Move card from foundation to end of a tableau stack
+                new_entry = {'from':[2,stack_idx], 'to':[1,tab_idx,0]} 
     
     
     return actions
