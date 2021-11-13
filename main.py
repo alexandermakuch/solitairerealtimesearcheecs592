@@ -1,7 +1,6 @@
-import SolitaireClasses, deckGenerator, reimplementation, random, queue
+import deckGenerator
+from reimplementation import HeuristicH1, HeuristicH2
 from deckGenerator import State
-from collections import deque
-import numpy as np
 
 #Generate a random deck of cards
 deck = deckGenerator.deckGen1()
@@ -26,21 +25,8 @@ if not unique:
 s0.printDeck()
 s0.printDeckLength()
 
-H1,H2 = s0.HeuristicH1H2()
+H1,H2 = HeuristicH1(s0.tableau,s0.foundation,s0.reachable_talon,s0.unreachable_talon),HeuristicH2(s0.tableau,s0.foundation,s0.reachable_talon,s0.unreachable_talon)
 print(H1,H2)
-
-
-
-#Load up our classes
-
-#something like
-def loadClasses(deck):
-    for _ in range(SolitaireClasses.Stock.cards):
-        SolitaireClasses.Stock.cards = deck.pop
-    #etc
-    return 0
-
-#loadClasses()
 
 
 
