@@ -26,8 +26,14 @@ if not unique:
 s0.printDeck()
 s0.printDeckLength()
 
-H1,H2 = s0.HeuristicH1H2()
-print(H1,H2)
+print('')
+print(s0.tableau[0])
+print(s0.tableau[0][0][0][1])
+print('')
+print(s0.reachable_talon)
+
+#H1,H2 = s0.HeuristicH1H2()
+#print(H1,H2)
 
 
 
