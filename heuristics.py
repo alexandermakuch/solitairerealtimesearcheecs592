@@ -57,7 +57,7 @@ def HeuristicH1(tableau,foundation,reachable_talon,unreachable_talon):
             tableau_build_cards = []
             if ((card[0] == "S") or (card[0] == "C")) and (card[1] != 13):
                 tableau_build_cards = [["H",card[1]+1],["D",card[1]+1]]
-            elif ((card[0] == "H") or (card[0] == "D"))and (card[1] != 13):
+            elif ((card[0] == "H") or (card[0] == "D")) and (card[1] != 13):
                 tableau_build_cards = [["S",card[1]+1],["C",card[1]+1]]
                 
             for tableau_stack in tableau:
@@ -141,7 +141,7 @@ def HeuristicH2(tableau,foundation,reachable_talon,unreachable_talon):
             tableau_build_cards = []
             if ((card[0] == "S") or (card[0] == "C")) and (card[1] != 13):
                 tableau_build_cards = [["H",card[1]+1],["D",card[1]+1]]
-            elif ((card[0] == "H") or (card[0] == "D"))and (card[1] != 13):
+            elif ((card[0] == "H") or (card[0] == "D")) and (card[1] != 13):
                 tableau_build_cards = [["S",card[1]+1],["C",card[1]+1]]
                 
             for tableau_stack in tableau:

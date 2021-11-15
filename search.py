@@ -125,7 +125,96 @@ def result(s,a):
     
     '''
     
+    #return a State object
     pass
+
+
+def detectUnwinnable(s): #need state from result(s,a) for each possible action returned by get_actions
+    '''
+    Input: a State object
+    Output: a flag telling whether this state is unwinnable or not
+    Implements two unwinnable cases covered in the paper
+    '''
+
+    detectUnwinnable = False
+
+    deck = [] #to recreate the deck from the passed stacks
+    tableau_face_down = []
+    tableau_face_up = []
+    foundation_all = []
+    for tableau_stack in s.tableau:
+        for card in tableau_stack[0]:
+            deck.append(card)
+            tableau_face_up.append(card)
+        for card in tableau_stack[1]:
+            deck.append(card)
+            tableau_face_down.append(card)
+    
+    for foundation_stack in s.foundation:
+        for card in foundation_stack:
+            deck.append(card)
+            foundation_all.append(card)
+    
+    for card in s.reachable_talon:
+        deck.append(card)
+
+    for card in s.unreachable_talon:
+        deck.append(card)
+
+
+    #for case 1 from the paper
+    for card in tableau_face_up: #find the tableau build cards for last face up card in each tableau stack
+        tableau_build_cards = []
+        if ((card[0] == "S") or (card[0] == "C")) and (card[1] != 13):
+            tableau_build_cards = [["H",card[1]+1],["D",card[1]+1]]
+        elif ((card[0] == "H") or (card[0] == "D")) and (card[1] != 13):
+            tableau_build_cards = [["S",card[1]+1],["C",card[1]+1]]
+
+        for tableau_stack in s.tableau:
+            if (card[0] == tableau_stack[0][-1][0]) and (card[1] == tableau_stack[0][-1][1]): #for this card to be blocking, it has to be the last face up card in a tableau stack 
+                #this is the last face up card in a tableau stack
+                blocking = tableau_stack[1]
+                
+                if (tableau_build_cards) and (tableau_build_cards[0] in blocking) and (tableau_build_cards[1] in blocking): #tableau_build_cards cannot be empty, using short circuiting
+                    for card2 in blocking:
+                        if (card2[1] < card[1]) and (card2[0] == card[0]): #blocking a lower rank card of the same suit
+                            detectUnwinnable = True
+                            return detectUnwinnable
+
+    #for case 2 from the paper
+    for card in tableau_face_up:
+        if card[0] == "S":
+            opp_color = ["C", card[1]] #opposite color card of same rank
+        elif card[0] == "C":
+            opp_color = ["S", card[1]] 
+        elif card[0] == "H":
+            opp_color = ["D", card[1]] 
+        elif card[0] == "D":
+            opp_color = ["H", card[1]] 
+
+        for tableau_stack in s.tableau:
+            if tableau_stack[1]: #the face down cards cannot be empty
+                if (card[0] == tableau_stack[0][-1][0]) and (card[1] == tableau_stack[0][-1][1]) and (opp_color[0] == tableau_stack[1][0][0]) and (opp_color[1] == tableau_stack[1][0][1]):
+                    #two cards of the same color and rank are in the same tableau stack where one is the last face up card and the other is the first face down card
+                    blocking = tableau_stack[1]
+
+                    #these two cards have the same tableau build cards
+                    tableau_build_cards = []
+                    if ((card[0] == "S") or (card[0] == "C")) and (card[1] != 13):
+                        tableau_build_cards = [["H",card[1]+1],["D",card[1]+1]]
+                    elif ((card[0] == "H") or (card[0] == "D")) and (card[1] != 13):
+                        tableau_build_cards = [["S",card[1]+1],["C",card[1]+1]]
+
+                    if (tableau_build_cards) and (tableau_build_cards[0] in blocking) or (tableau_build_cards[1] in blocking): #blocking one tableau build card
+                        for card2 in blocking:
+                            for card3 in blocking:
+                                if (card2[1] < card[1]) and (card2[0] == card[0]) and (card3[1] < opp_color[1]) and (card3[0] == opp_color[0]): 
+                                    #blocking a lower rank card of the same suit and opposite suit
+                                    detectUnwinnable = True
+                                    return detectUnwinnable
+
+
+    return detectUnwinnable
 
 
 def greedy(s,h): #Takes in starting state and a heuristic function
