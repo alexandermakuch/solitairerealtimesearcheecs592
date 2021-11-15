@@ -29,12 +29,28 @@ def get_actions(s):
         
         #Talon to foundation
         for found_idx, stack in enumerate(s.foundation):
-            if stack[0][0] == card[0] and stack[0][1] - card[1] == 1: #If suits match and proper next card
-                new_entry = {'from':[0,tal_idx], 'to':[2,found_idx]}
+            if stack: #Make sure there's cards in the stack
+                if stack[0][0] == card[0] and stack[0][1] - card[1] == 1: #If suits match and proper next card
+                    new_entry = {'from':[0,tal_idx], 'to':[2,found_idx]}
+                    actions.append(new_entry)
+            else: #No cards in foundation stack
+                if card[1] == 1: #is ace
+                    if found_idx == 0:
+                        suit = 'D'
+                    elif found_idx == 1:
+                        suit = 'C'
+                    elif found_idx == 2:
+                        suit = 'H'
+                    elif found_idx == 3:
+                        suit = 'S'
+                    
+                    if card[0] == suit: #Matchs stack suit
+                        new_entry = {'from':[0,tal_idx], 'to':[2,found_idx]}
+                        actions.append(new_entry)
+                    
  #-------------------------------------------------------------------------------------------------------               
     #See where tableau cards/stacks can be moved to
     for stack_idx, stack in enumerate(s.tableau): #For each stack
-        
         #Tableau to tableau:
         for stack_depth in range(len(stack[0])): #For each card in a face up stack
             card = stack[0][stack_depth]
@@ -45,26 +61,50 @@ def get_actions(s):
                     #if stack_depth > 0
                     new_entry = {'from':[1,stack_idx,stack_depth], 'to':[1,si2,0]}
                     actions.append(new_entry)
-                
-        
+
             #If next card in stack can't be moved, stop looping through stack
-            if stack_depth < len(stack[0]):
-                if stack[stack_depth+1][1] - stack[stack_depth][1] != 1: 
+            if stack_depth < len(stack[0])-1:
+                if stack[0][stack_depth+1][1] - stack[stack_depth][1] != 1: 
                     break
                     
     
         #Tableau to foundation:
         for found_idx, found_stack in enumerate(s.foundation):
-            if stack[0][0] == found_stack[0] and found_stack[0][1] - stack[0][1] == 1:
-                new_entry = {'from':[1,stack_idx,0], 'to':[2,found_idx]}
+            if found_stack: #Verify it's not empty
+                if stack[0][0] == found_stack[0] and found_stack[0][1] - stack[0][1] == 1:
+                    new_entry = {'from':[1,stack_idx,0], 'to':[2,found_idx]}
+                    actions.append(new_entry)
+            else: #Empty foundation stack
+                if stack[0][0][1] == 1: #Is ace
+                    if found_idx == 0:
+                        suit = 'D'
+                    elif found_idx == 1:
+                        suit = 'C'
+                    elif found_idx == 2:
+                        suit = 'H'
+                    elif found_idx == 3:
+                        suit = 'S'
+                    
+                
+                    if stack[0][0][0] == suit: #Matchs stack suit
+                        new_entry = {'from':[1,stack_idx,0], 'to':[2,found_idx]}
+                        actions.append(new_entry)
+                    
  #------------------------------------------------------------------------------------------------------- 
     #See where foundation cards can be moved to
     for stack_idx, stack in enumerate(s.foundation):
         #Foundation to tableau
-        for tab_idx, tab_stack in enumerate(s.tableau):
-            if opp_color_check(stack[0][0], tab_stack[0][0]) and tab_stack[0][1] - stack[0][1] == 1:
-                #Move card from foundation to end of a tableau stack
-                new_entry = {'from':[2,stack_idx], 'to':[1,tab_idx,0]} 
+        if stack:
+            for tab_idx, tab_stack in enumerate(s.tableau):
+                if tab_stack: #Nonempty tableau stack
+
+                    if opp_color_check(stack[0][0], tab_stack[0][0]) and tab_stack[0][1] - stack[0][1] == 1:
+                        #Move card from foundation to end of a tableau stack
+                        new_entry = {'from':[2,stack_idx], 'to':[1,tab_idx,0]}
+                        
+                else: #Empty tableau stack
+                    if tab_stack[0][1] == 13:
+                        new_entry = {'from':[2,stack_idx], 'to':[1,tab_idx,0]}
     
     
     return actions

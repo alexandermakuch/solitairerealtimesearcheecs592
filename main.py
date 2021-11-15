@@ -1,6 +1,7 @@
 import deckGenerator
 from reimplementation import HeuristicH1, HeuristicH2
 from deckGenerator import State
+from search import get_actions
 
 #Generate a random deck of cards
 deck = deckGenerator.deckGen1()
@@ -27,7 +28,9 @@ s0.printDeckLength()
 
 H1,H2 = HeuristicH1(s0.tableau,s0.foundation,s0.reachable_talon,s0.unreachable_talon),HeuristicH2(s0.tableau,s0.foundation,s0.reachable_talon,s0.unreachable_talon)
 print(H1,H2)
-
+print('')
+print('')
+a = get_actions(s0)
 
 
 # A New State Representation: K+ Solitaire

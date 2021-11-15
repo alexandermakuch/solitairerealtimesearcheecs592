@@ -6,7 +6,7 @@ from collections import deque
 #like Deck = [("S", "2"), ...] or a list of strings like ["S2", ...], 
 # #I have implemented both, we can just copy the values of one into the final code to reduce computational complexity
 
-Suits = ["S", "C", "H", "D"]
+Suits = ["D", "C", "H", "S"]
 #Ace is 1, Jack is 11, Queen is 12, King is 13
 #numbers will make comparisons easier later on
 Elements = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
