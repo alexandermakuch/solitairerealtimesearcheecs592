@@ -1,5 +1,5 @@
 import deckGenerator
-from reimplementation import HeuristicH1, HeuristicH2
+from heuristics import HeuristicH1, HeuristicH2
 from deckGenerator import State
 from search import get_actions
 
@@ -26,11 +26,26 @@ if not unique:
 s0.printDeck()
 s0.printDeckLength()
 
-H1,H2 = HeuristicH1(s0.tableau,s0.foundation,s0.reachable_talon,s0.unreachable_talon),HeuristicH2(s0.tableau,s0.foundation,s0.reachable_talon,s0.unreachable_talon)
+
+tableauWin, foundationWin, reachable_talonWin, unreachable_talonWin = deckGenerator.winGen(deck)
+sWin = State(tableauWin, foundationWin, reachable_talonWin, unreachable_talonWin)
+sWin.printDeck()
+sWin.printDeckLength()
+
+#H1,H2 = HeuristicH1(s0.tableau,s0.foundation,s0.reachable_talon,s0.unreachable_talon),HeuristicH2(s0.tableau,s0.foundation,s0.reachable_talon,s0.unreachable_talon)
+#print(H1,H2)
+#print('')
+#print('')
+
+H1,H2 = s0.HeuristicH1H2()
 print(H1,H2)
 print('')
 print('')
-a = get_actions(s0)
+H1,H2 = sWin.HeuristicH1H2()
+print(H1,H2)
+print('')
+print('')
+#a = get_actions(s0)
 
 
 # A New State Representation: K+ Solitaire

@@ -98,6 +98,100 @@ class State:
         print("All cards are unique")
         return isUnique
 
+    def HeuristicH1H2(self):
+
+        deck = [] #to recreate the deck from the passed stacks
+        tableau_face_down = []
+        tableau_face_up = []
+        foundation_all = []
+        for tableau_stack in self.tableau:
+            for card in tableau_stack[0]:
+                deck.append(card)
+                tableau_face_up.append(card)
+            for card in tableau_stack[1]:
+                deck.append(card)
+                tableau_face_down.append(card)
+        
+        for foundation_stack in self.foundation:
+            for card in foundation_stack:
+                deck.append(card)
+                foundation_all.append(card)
+        
+        for card in self.reachable_talon:
+            deck.append(card)
+
+        for card in self.unreachable_talon:
+            deck.append(card)
+
+
+        H1 = 0
+        H2 = 0
+        num_elses = 0
+
+        for card in deck:
+            h1 = 0
+            h2 = 0
+            if card in foundation_all: #number 1 in table 1
+                h1 = 5 - (card[1] - 1) #-1 because the rank value starts at 0
+                h2 = 5
+
+            elif card in tableau_face_down: #number 2 in table 1
+                h1 = (card[1] - 1) - 13
+                h2 = (card[1] - 1) - 13
+                if card[0] == "S":
+                    counterpart = ["C", card[1]]
+                elif card[0] == "C":
+                    counterpart = ["S", card[1]]
+                elif card[0] == "H":
+                    counterpart = ["D", card[1]]
+                elif card[0] == "D":
+                    counterpart = ["H", card[1]]
+
+                if counterpart in tableau_face_down: #number 4 in table 1
+                    h1 = -5
+                    h2 = -1
+
+            elif card in self.reachable_talon: #number 3 in table 1
+                h1 = 0
+                h2 = 1
+
+            elif card in tableau_face_up: 
+                tableau_build_cards = []
+                if ((card[0] == "S") or (card[0] == "C")) and (card[1] != 13):
+                    tableau_build_cards = [["H",card[1]+1],["D",card[1]+1]]
+                elif ((card[0] == "H") or (card[0] == "D"))and (card[1] != 13):
+                    tableau_build_cards = [["S",card[1]+1],["C",card[1]+1]]
+                    
+                for tableau_stack in self.tableau:
+                    if (card[0] == tableau_stack[0][-1][0]) and (card[1] == tableau_stack[0][-1][1]): #for this card to be blocking, it has to be the last face up card in a tableau stack 
+                    #for card2 in tableau_stack[0]:
+                        #if (card[0] == card2[0]) and (card[1] == card2[1]):
+                        #    blocking = tableau_stack[1] #if the card is face up in the tableau, find the list of cards it is blocking
+                        #    break
+                        blocking = tableau_stack[1]
+                        break
+                
+                for card2 in blocking: 
+                    if card2 in tableau_build_cards: #number 6 in table1
+                        h1 = -10
+                        h2 = -5
+                        break
+                    elif card2[1] < card[1]: #number 5 in table 1
+                        h1 = -5
+                        h2 = -1
+                        break
+
+            else: #I dont think this should be needed as every card should fall into a category. Is the K+ talon wrong?
+                h1 = 0
+                h2 = 0
+                num_elses += 1
+
+            H1 += h1 #sum the heuristic for this card 
+            H2 += h2 #sum the heuristic for this card
+
+        #print(num_elses)
+        return H1, H2
+        
     
 
 
@@ -176,6 +270,34 @@ def tableauGen(Deck):
     tableau7 = [deque([Deck[21]]), deque(Deck[22:28])]
     Tableau = [tableau1,tableau2,tableau3,tableau4,tableau5,tableau6,tableau7]
     return Tableau
+
+
+def winGen(Deck):
+    tableau1 = [deque([]),deque([])]
+    Tableau = [tableau1,tableau1,tableau1,tableau1,tableau1,tableau1,tableau1] #empty tableau
+    Reachable_Talon = deque([]) #empty reachable talon
+    Unreachable_Talon = deque([]) #empty unreachable talon
+    
+    foundation1 = deque([]) #for spades
+    foundation2 = deque([]) #for clubs
+    foundation3 = deque([]) #for hearts
+    foundation4 = deque([]) #for diamonds
+
+    for i in Suits:
+        for j in reversed(Elements):#the K should be at the top and the A at the bottom
+            if i == 'S':
+                foundation1.append([i,j])
+            elif i == 'C':
+                foundation2.append([i,j])
+            elif i == 'H':
+                foundation3.append([i,j])
+            elif i == 'D':
+                foundation4.append([i,j])
+    
+    Foundation = [foundation1,foundation2,foundation3,foundation4]
+
+
+    return Tableau, Foundation, Reachable_Talon, Unreachable_Talon
 
 
 def turnstock(Stock:deque,Talon:list):
