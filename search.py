@@ -21,11 +21,13 @@ def get_actions(s):
         
         #Talon to tableau
         for tab_idx, stack in enumerate(s.tableau):
-            
-            #If tableau end is different colors and one number higher than talon card
-            if opp_color_check(card, stack[0]) and stack[0][1] - card[1] == 1:
-                new_entry = {'from':[0, tal_idx], 'to':[1,tab_idx,0]}
-                actions.append(new_entry)
+            if stack:
+                #If tableau end is different colors and one number higher than talon card
+                if opp_color_check(card, stack[0]) and stack[0][1] - card[1] == 1:
+                    new_entry = {'from':[0, tal_idx], 'to':[1,tab_idx,0]}
+                    actions.append(new_entry)
+            elif card[1] == 13: #King
+                new_entry = {'from':[0,tal_idx], 'to':[1,tab_idx,0]}
         
         #Talon to foundation
         for found_idx, stack in enumerate(s.foundation):
@@ -56,11 +58,14 @@ def get_actions(s):
             card = stack[0][stack_depth]
             
             for si2, stack2 in enumerate(s.tableau): #Iterate through each card in stack
-                if opp_color_check(card,stack2[0][0]) and stack2[0][0][1] - card[1] == 1:
-                    #Append a card if stack_depth = 0, append a bundle of cards starting from stack_depth
-                    #if stack_depth > 0
+                if stack2:
+                    if opp_color_check(card,stack2[0][0]) and stack2[0][0][1] - card[1] == 1:
+                        #Append a card if stack_depth = 0, append a bundle of cards starting from stack_depth
+                        #if stack_depth > 0
+                        new_entry = {'from':[1,stack_idx,stack_depth], 'to':[1,si2,0]}
+                        actions.append(new_entry)
+                elif card[1] == 13: #Empty stack, and king
                     new_entry = {'from':[1,stack_idx,stack_depth], 'to':[1,si2,0]}
-                    actions.append(new_entry)
 
             #If next card in stack can't be moved, stop looping through stack
             if stack_depth < len(stack[0])-1:
