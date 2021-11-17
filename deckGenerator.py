@@ -1,4 +1,5 @@
 import random
+import numpy as np
 from collections import deque
 #from SolitaireClasses import Talon
 
@@ -232,19 +233,11 @@ def isUniqueDeck(deck):
 
 
 
-def deckGen1():
+def deckGen():
     Deck = []
     for i in Suits:
         for j in Elements:
             Deck.append([i,j])
-    random.shuffle(Deck)
-    return Deck
-
-def deckGen2():
-    Deck = []
-    for i in Suits:
-        for j in Elements:
-            Deck.append(i+j)
     random.shuffle(Deck)
     return Deck
 
@@ -300,50 +293,154 @@ def winGen(Deck):
     return Tableau, Foundation, Reachable_Talon, Unreachable_Talon
 
 
-def turnstock(Stock:deque,Talon:list):
-    Talon.append((deque([Stock.popleft(),Stock.popleft(),Stock.popleft()][::-1]))) #if we keep it like this, reversed, popleft is the proper way to remove from the talon. if we don't reverse we can just use pop instead
-    return Talon
+# def turnstock(Stock:deque,Talon:list):
+#     Talon.append((deque([Stock.popleft(),Stock.popleft(),Stock.popleft()][::-1]))) #if we keep it like this, reversed, popleft is the proper way to remove from the talon. if we don't reverse we can just use pop instead
+#     return Talon
 
     
-def kplusTalon(Stock:deque,Talon:list = []):
-    '''
-    Inputs: Stock, Talon
-    Outputs: List of reachable states in Stock/Talon
-    '''
-    #First, we add every third card in the stock. These will always be reachable.
-    sLen = len(Stock)
+# def kplusTalon(Stock:deque,Talon:list = []):
+#     '''
+#     Inputs: Stock, Talon
+#     Outputs: List of reachable states in Stock/Talon
+#     '''
+#     #First, we add every third card in the stock. These will always be reachable.
+#     sLen = len(Stock)
+
+#     reachable = deque([])
+#     unreachable = Stock.copy() #shallow copy of stock
+#     unreachable.extend(Talon) #adding cards in talon, they'll be removed as we 
+
+#     for x in range(int(sLen/3)):
+#         reachable.append(Stock[3*x+2])
+#         unreachable.remove(Stock[3*x+2])
+#     if (sLen % 3) != 0:
+#         reachable.append(Stock[sLen-1])
+#         unreachable.remove(Stock[sLen-1])
+
+#     if (len(Talon)) > 0:
+#         for x in range(len(Talon)):
+#             reachable.append(Talon[x][0])
+#             unreachable.remove((Talon[x][0]))
+
+#     #Next, we check if there are any lists in talon with length not equal to 3
+#     add = False
+#     frompoint = 52
+#     for x in range(len(Talon)):
+#         if len(Talon[x]) != 3:
+#             add = True
+#             frompoint = min(frompoint,x)
+    
+#     if add:
+#         for x in range(frompoint,int(sLen/3)):
+#             reachable.append(Stock[3*x+1])
+#             unreachable.remove((Stock[3*x+1]))
+#         if (sLen % 3) != 0:
+#             reachable.append(Stock[sLen-2])
+#             unreachable.remove(Stock[sLen-2])
+
+#     #if reachable becomes binary, would be good to just return the reachable_talon and unreachable_talon here anyway
+#     return reachable, unreachable
+def initKplus(x: list):
+    reachable = deque([])
+    unreachable = deque([])
+    for a, val in enumerate(np.tile(np.array([False, False, True]), 8)):
+        if val:
+            reachable.append(x[a])
+        else:
+            unreachable.append(x[a])
+    return reachable, unreachable
+
+
+def Kplus(element, x: list,lens: np.array, classes: np.array):
+    ind = x.index(element) #index in x of the element we're popping
+    elemClass = classes[ind] #class of the element we're popping
+    xLen = len(x)
+    if elemClass == 2:
+        lens =  np.tile(3,int(xLen/3))
+        if xLen % 3 == 2:
+            lens = np.append(lens,2)
+        elif xLen %3 == 1:
+            lens = np.append(lens,1)
+        lens[int((ind)/3)] -= 1
+        xLen -= 1
+    elif elemClass == 1:
+        lens[int((ind)/3)] -= 1
+        xLen -= 1
+    else:
+        return None, None, None, None, None
+    x.remove(element)
+
+    def resort(tempLens):
+        for i in range(len(tempLens)):
+                    index = int(3*i + tempLens[i]-1)
+                    reachability[index] = True
+                    modClass[index] = 2
+
+    if 0 in lens: #need to remove this index from lens
+        lens = np.delete(lens,np.argwhere(lens == 0))
+
+    modClass = np.zeros(xLen)
+    reachability = np.zeros(xLen, dtype=bool)
+    # add all from last non 3 (excluding final value) onwards as class 1.
+    if xLen > 3:
+        lensflip = lens[::-1][1:]
+        lastInd = len(lensflip) - np.argmax(lensflip < 3) -1 #last non 3 index of lens
+        index = int(np.sum(lens[:lastInd])-1+lens[lastInd])
+        reachability[index] = True
+        modClass[index] = 1
+        for i in range(1,len(lens)-lastInd):
+            index = int(np.sum(lens[:lastInd])-1+lens[lastInd]+3*i)
+            if index < xLen:
+                reachability[index] = True
+                modClass[index] = 1
+        
+        #resort the deck and add last of each pile to reachable and set their class to 2
+        tempLens = 3*np.ones(int(xLen/3))
+        tempLens = np.append(tempLens, xLen % 3)
+        resort(tempLens)
+    elif xLen > 0:
+        #len -> 1
+        tempLens = 3*np.ones(int(xLen/3))
+        tempLens = np.append(tempLens, xLen % 3)
+        if len(lens) == 1:
+            pass #just the last card is playable
+        elif len(lens) == 2:
+            if ind > lens[0]: #we're in pile 2
+                resort(tempLens)
+            else:
+                #last card in 1st pile, then resort
+                reachability[lens[0]-1] = True
+                modClass[lens[0]-1] = 1
+                resort(tempLens)
+        elif len(lens) == 3:
+            if ind > (lens[0]+lens[1]): #we're in pile 3
+                resort(tempLens)
+            elif ind > (lens[0]): #we're in pile 2
+                reachability[lens[0]+lens[1]-1] = True
+                modClass[lens[0]+lens[1]-1] = 1
+                resort(tempLens)
+
+            else: #we're in pile 1
+                reachability[lens[0]-1] = True
+                modClass[lens[0]-1] = 1
+                reachability[lens[0]-1] = True
+                modClass[lens[0]-1] = 1
+                resort(tempLens)
+
+    else:
+        return None, None, None, None, None
+    #make last card immediately playable    
+    modClass[-1] = 1
+    reachability[-1] = True
 
     reachable = deque([])
-    unreachable = Stock.copy() #shallow copy of stock
-    unreachable.extend(Talon) #adding cards in talon, they'll be removed as we 
+    unreachable = deque([])
+    for a, val in enumerate(reachability):
+        if val:
+            reachable.append(x[a])
+        else:
+            unreachable.append(x[a])
 
-    for x in range(int(sLen/3)):
-        reachable.append(Stock[3*x+2])
-        unreachable.remove(Stock[3*x+2])
-    if (sLen % 3) != 0:
-        reachable.append(Stock[sLen-1])
-        unreachable.remove(Stock[sLen-1])
+    return x, lens, reachable, unreachable, modClass
 
-    if (len(Talon)) > 0:
-        for x in range(len(Talon)):
-            reachable.append(Talon[x][0])
-            unreachable.remove((Talon[x][0]))
 
-    #Next, we check if there are any lists in talon with length not equal to 3
-    add = False
-    frompoint = 52
-    for x in range(len(Talon)):
-        if len(Talon[x]) != 3:
-            add = True
-            frompoint = min(frompoint,x)
-    
-    if add:
-        for x in range(frompoint,int(sLen/3)):
-            reachable.append(Stock[3*x+1])
-            unreachable.remove((Stock[3*x+1]))
-        if (sLen % 3) != 0:
-            reachable.append(Stock[sLen-2])
-            unreachable.remove(Stock[sLen-2])
-
-    #if reachable becomes binary, would be good to just return the reachable_talon and unreachable_talon here anyway
-    return reachable, unreachable

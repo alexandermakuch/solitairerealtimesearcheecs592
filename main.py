@@ -1,12 +1,13 @@
 from collections import deque
 import deckGenerator
 from heuristics import HeuristicH1, HeuristicH2
-from deckGenerator import State
+from deckGenerator import State, Kplus, initKplus
 from search import detectUnwinnable, get_actions, result
 import copy
+import numpy as np
 
 #Generate a random deck of cards
-deck = deckGenerator.deckGen1()
+deck = deckGenerator.deckGen()
 #print(deck)
 #print(len(deck))
 
@@ -14,8 +15,9 @@ deck = deckGenerator.deckGen1()
 tableau = deckGenerator.tableauGen(deck)
 foundation = deckGenerator.foundationGen()
 stock = deckGenerator.StockGen(deck)
-talon = []
-reachable_talon, unreachable_talon = deckGenerator.kplusTalon(stock,talon)
+lens= np.array([3,3,3,3,3,3,3,3])
+classes = np.tile(np.array([0,0,1]),8)
+reachable_talon, unreachable_talon = initKplus(stock)
 #unreachable_talon = deckGenerator.unreachableTalonGen(deck)
 
 s0 = State(tableau, foundation, reachable_talon, unreachable_talon)
@@ -90,22 +92,3 @@ print(detectUnwinnable(suwtest)) #should be True
 
 print("Testing Unwinnable s0:")
 print(detectUnwinnable(s0))
-
-# A New State Representation: K+ Solitaire
-#This may not stay as a function, I'm just putting it here so there's somewhere to keep it
-#example talon queue for testing
-#talon = queue.LifoQueue()
-#talon.put("5D")
-#talon.put("AS")
-#talon.put("10H")
-#talon.put("3C")
-#talon.put("QH")
-
-def compressedSearchTree():
-    return 0
-
-def isReachable():
-    '''
-    Helper function for compressed search tree
-    '''
-    return 0
