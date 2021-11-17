@@ -109,24 +109,36 @@ def get_actions(s):
     
     return actions
 
-def result(s,a):
-    #Given an action and state, returns the new state
-    
-    #Will change two locations. Involves removing a card from one location
-    #and adding it to the other location.
+def result(s: State,a):
     '''
-    Ex, adding card from talon to foundation
-    
-    if talon talon to foundation:
-        s_new = s.copy
-        s_new.talon[end].pop(a[from])
-        s_new.foundation[ind].append(a[to])
-        return s_new
-    
+    s - state
+    a - action. this should be  [{'from':[bin idx, location in talon], 'to':[bin idx, stack, location in stack] } ]
     '''
-    
-    #return a State object
-    pass
+
+    if a['from'][0] == 0: #0 = from reachable_talon
+        if a['to'][0] == 1: #to tableau
+            s.tableau[a['to'][1]][0].appendleft(s.reachable_talon[a['from'][1]].popleft()) #need to check if this will be pop or popleft
+        if a['to'][0] == 2: #to foundation
+            s.foundation[a['to'][1]].appendleft(s.reachable_talon[a['from'][1]].popleft()) #need to check if this will be pop or popleft
+        ## need to recalculate kplus talon here
+
+    elif a['from'][0] == 1: #1 = from tableau
+        if a['to'][0] == 1: #to tableau
+            pass
+        if a['to'][0] == 2: #to foundation
+            pass
+        #check if we need to reveal cards
+        if len(s.tableau[a['from'][1]][0]) == 0:
+            s.tableau[a['from'][1]][0] = deque(s.tableau[a['from'][1]][0].popleft())
+
+    elif a['from'][0] == 2: #2 = from foundation
+        #cards from foundation can only be moved to the tableau 
+        s.tableau[a['to'][1]][0].appendleft(s.foundation[a['from'][1]].popleft()) #need to check if this will be pop or popleft
+    else:
+        print("ERROR INVALID INDEX")
+        return 0
+
+    return s
 
 
 def detectUnwinnable(s): #need state from result(s,a) for each possible action returned by get_actions
