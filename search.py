@@ -1,4 +1,7 @@
 import numpy as np
+from deckGenerator import Kplus, State
+from collections import deque
+# K+ initialization
 
 def opp_color_check(c1, c2):
     diff_colors = False
@@ -121,10 +124,13 @@ def result(s: State,a):
     '''
 
     if a['from'][0] == 0: #0 = from reachable_talon
+
+        card = s.reachable_talon[a['from'][1]]
+        s.stock, s.lens, s.reachable_talon, s.unreachable_talon, s.classes = Kplus(card, s.stock, s.lens, s.classes)
         if a['to'][0] == 1: #to tableau
-            s.tableau[a['to'][1]][0].appendleft(s.reachable_talon[a['from'][1]].popleft()) #need to check if this will be pop or popleft
+            s.tableau[a['to'][1]][0].appendleft(card) #need to check if this will be pop or popleft
         if a['to'][0] == 2: #to foundation
-            s.foundation[a['to'][1]].appendleft(s.reachable_talon[a['from'][1]].popleft()) #need to check if this will be pop or popleft
+            s.foundation[a['to'][1]].appendleft(card) #need to check if this will be pop or popleft
         ## need to recalculate kplus talon here
 
     elif a['from'][0] == 1: #1 = from tableau
@@ -287,7 +293,3 @@ def mns_rollout(s, hs, ns, a):
             #implement way to store the path we take
             
     return hs[0](s)
-            
-    
-    
-    

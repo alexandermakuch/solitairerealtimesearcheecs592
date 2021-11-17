@@ -2,7 +2,7 @@ from collections import deque
 import deckGenerator
 from heuristics import HeuristicH1, HeuristicH2
 from deckGenerator import State, Kplus, initKplus
-from search import detectUnwinnable, get_actions, result
+from search import detectUnwinnable, get_actions
 import copy
 import numpy as np
 
@@ -18,9 +18,8 @@ stock = deckGenerator.StockGen(deck)
 lens= np.array([3,3,3,3,3,3,3,3])
 classes = np.tile(np.array([0,0,1]),8)
 reachable_talon, unreachable_talon = initKplus(stock)
-#unreachable_talon = deckGenerator.unreachableTalonGen(deck)
 
-s0 = State(tableau, foundation, reachable_talon, unreachable_talon)
+s0 = State(tableau, foundation, reachable_talon, unreachable_talon, stock, lens, classes)
 
 #unique = deckGenerator.isUniqueDeck(deck)
 unique = s0.isUniqueStacks()
@@ -31,8 +30,8 @@ s0.printDeck()
 s0.printDeckLength()
 
 
-tableauWin, foundationWin, reachable_talonWin, unreachable_talonWin = deckGenerator.winGen(deck)
-sWin = State(tableauWin, foundationWin, reachable_talonWin, unreachable_talonWin)
+tableauWin, foundationWin, reachable_talonWin, unreachable_talonWin, stockWin, lensWin, classesWin = deckGenerator.winGen(deck)
+sWin = State(tableauWin, foundationWin, reachable_talonWin, unreachable_talonWin, stockWin, lensWin, classesWin)
 sWin.printDeck()
 sWin.printDeckLength()
 
@@ -42,13 +41,9 @@ sWin.printDeckLength()
 #print('')
 
 H1,H2 = s0.HeuristicH1H2()
-print(H1,H2)
-print('')
-print('')
+print(H1,H2, '\n\n')
 H1,H2 = sWin.HeuristicH1H2()
-print(H1,H2)
-print('')
-print('')
+print(H1,H2, '\n\n')
 
 #tester code for get_actions, result, and detectUnwinnable functions
 a0 = get_actions(s0)
@@ -72,13 +67,14 @@ a0 = get_actions(s0)
 tableau = deckGenerator.tableauGen(deck)
 foundation = deckGenerator.foundationGen()
 stock = deckGenerator.StockGen(deck)
-talon = []
-reachable_talon, unreachable_talon = deckGenerator.kplusTalon(stock,talon)
+lens= np.array([3,3,3,3,3,3,3,3])
+classes = np.tile(np.array([0,0,1]),8)
+reachable_talon, unreachable_talon = deckGenerator.initKplus(stock)
 
 tableau[6][0] = deque([['S', 12]])
 tableau[6][1] = deque([['S', 2],['S', 5],['D', 13],['H', 7],['D', 5],['H', 13]])
 
-suwtest = State(tableau, foundation, reachable_talon, unreachable_talon)
+suwtest = State(tableau, foundation, reachable_talon, unreachable_talon, stock, lens, classes)
 #suwtest.printDeck()
 
 print("Testing Unwinnable Case #1")

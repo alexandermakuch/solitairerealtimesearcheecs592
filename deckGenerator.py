@@ -14,11 +14,17 @@ Elements = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
 
 
 class State:
-    def __init__(self, tableau, foundation, reachable_talon, unreachable_talon):
+    def __init__(self, tableau, foundation, reachable_talon, unreachable_talon, stock, lens, classes):
         self.tableau = tableau
         self.foundation = foundation
         self.reachable_talon = reachable_talon
         self.unreachable_talon = unreachable_talon
+        self.stock = stock
+        self.lens = lens
+        self.classes = classes
+
+    def __eq__(self, other):
+        return self.tableau == other.tableau and self.foundation == other.foundation and self.stock == other.stock
 
     def printDeck(self):
         print("Tableau: ", self.tableau)
@@ -270,6 +276,9 @@ def winGen(Deck):
     Tableau = [tableau1,tableau1,tableau1,tableau1,tableau1,tableau1,tableau1] #empty tableau
     Reachable_Talon = deque([]) #empty reachable talon
     Unreachable_Talon = deque([]) #empty unreachable talon
+    stock = []
+    classes = np.array([])
+    lens = np.array([])
     
     foundation1 = deque([]) #for spades
     foundation2 = deque([]) #for clubs
@@ -290,56 +299,9 @@ def winGen(Deck):
     Foundation = [foundation1,foundation2,foundation3,foundation4]
 
 
-    return Tableau, Foundation, Reachable_Talon, Unreachable_Talon
+    return Tableau, Foundation, Reachable_Talon, Unreachable_Talon, stock, lens, classes
 
 
-# def turnstock(Stock:deque,Talon:list):
-#     Talon.append((deque([Stock.popleft(),Stock.popleft(),Stock.popleft()][::-1]))) #if we keep it like this, reversed, popleft is the proper way to remove from the talon. if we don't reverse we can just use pop instead
-#     return Talon
-
-    
-# def kplusTalon(Stock:deque,Talon:list = []):
-#     '''
-#     Inputs: Stock, Talon
-#     Outputs: List of reachable states in Stock/Talon
-#     '''
-#     #First, we add every third card in the stock. These will always be reachable.
-#     sLen = len(Stock)
-
-#     reachable = deque([])
-#     unreachable = Stock.copy() #shallow copy of stock
-#     unreachable.extend(Talon) #adding cards in talon, they'll be removed as we 
-
-#     for x in range(int(sLen/3)):
-#         reachable.append(Stock[3*x+2])
-#         unreachable.remove(Stock[3*x+2])
-#     if (sLen % 3) != 0:
-#         reachable.append(Stock[sLen-1])
-#         unreachable.remove(Stock[sLen-1])
-
-#     if (len(Talon)) > 0:
-#         for x in range(len(Talon)):
-#             reachable.append(Talon[x][0])
-#             unreachable.remove((Talon[x][0]))
-
-#     #Next, we check if there are any lists in talon with length not equal to 3
-#     add = False
-#     frompoint = 52
-#     for x in range(len(Talon)):
-#         if len(Talon[x]) != 3:
-#             add = True
-#             frompoint = min(frompoint,x)
-    
-#     if add:
-#         for x in range(frompoint,int(sLen/3)):
-#             reachable.append(Stock[3*x+1])
-#             unreachable.remove((Stock[3*x+1]))
-#         if (sLen % 3) != 0:
-#             reachable.append(Stock[sLen-2])
-#             unreachable.remove(Stock[sLen-2])
-
-#     #if reachable becomes binary, would be good to just return the reachable_talon and unreachable_talon here anyway
-#     return reachable, unreachable
 def initKplus(x: list):
     reachable = deque([])
     unreachable = deque([])
@@ -442,5 +404,3 @@ def Kplus(element, x: list,lens: np.array, classes: np.array):
             unreachable.append(x[a])
 
     return x, lens, reachable, unreachable, modClass
-
-
