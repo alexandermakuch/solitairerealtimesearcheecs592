@@ -293,3 +293,71 @@ def mns_rollout(s, hs, ns, a):
             #implement way to store the path we take
             
     return hs[0](s)
+
+def loop_check(s):
+    #Check for loop
+    pass
+#-----------------------------------------------------------------------------
+def cache_check(s,cache):
+    for entry in cache:
+        if s == entry:
+            return True
+        
+    return False
+
+            
+#-----------------------------------------------------------------------------
+def mns_rollout_enhanced(s, hs, ns, a):
+    if hs[0].h(s) == 'WIN': return 'WIN'
+
+    if loop_check(s): return 'LOSS'    
+
+    
+    #i.e. no more levels of nesting and not dead end
+    if not get_actions(s) and ns[0] == -1: 
+        return hs[0].h(s)
+    
+    if cache_check(s,hs[0].cache):
+        if len(hs) == 1:
+            return hs[0](s)
+        else:
+            return mns_rollout_enhanced(s,hs[1:],ns[1:])
+        
+    while hs[0].h(s) != 'LOSS':
+        actions = get_actions(s)
+        best_val = -float('inf')
+        for act in actions:
+            new_n = ns.copy()
+            new_n[0] -= 1
+            val = mns_rollout_enhanced(result(s,act), hs, new_n, act)
+            
+            if isinstance(val, str):
+            
+                if val == 'WIN':
+                    best_val = val
+                    best_a = act
+                elif val == 'LOSS':
+                    if -10000 > best_val:
+                        best_val = -10000
+                        best_a = act 
+            else:
+                if val > best_val or val == 'WIN':
+                    best_val = val
+                    best_a = act
+                    
+        if best_val == 'WIN':
+            return 'WIN'
+        if best_val == 'LOSS' or (len(hs) != 0 and best_val < hs[0].h(s)):
+            if len(hs)==1: return hs[0].h(s)
+            else: return mns_rollout_enhanced(result(s,best_a,hs[1:],ns[1:]))
+        
+            
+        s = result(s,best_a)
+        if ns[0] != 0 and len(hs[0].cache) < 5000: #Only cache at non-zero nesting levels
+            hs[0].cache.append(s) #Appends to appropriate heuristic
+            hs[0].n.append(ns[0])
+                    
+                
+            #implement way to store the path we take
+            
+#-----------------------------------------------------------------------------
