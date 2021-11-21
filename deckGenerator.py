@@ -271,7 +271,7 @@ def tableauGen(Deck):
     return Tableau
 
 
-def winGen(Deck):
+def winGen():
     tableau1 = [deque([]),deque([])]
     Tableau = [tableau1,tableau1,tableau1,tableau1,tableau1,tableau1,tableau1] #empty tableau
     Reachable_Talon = deque([]) #empty reachable talon

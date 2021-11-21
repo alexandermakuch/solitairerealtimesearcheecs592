@@ -216,10 +216,17 @@ def detectUnwinnable(s): #need state from result(s,a) for each possible action r
             opp_color = ["H", card[1]] 
 
         for tableau_stack in s.tableau:
-            if tableau_stack[1]: #the face down cards cannot be empty
-                if (card[0] == tableau_stack[0][-1][0]) and (card[1] == tableau_stack[0][-1][1]) and (opp_color[0] == tableau_stack[1][0][0]) and (opp_color[1] == tableau_stack[1][0][1]):
-                    #two cards of the same color and rank are in the same tableau stack where one is the last face up card and the other is the first face down card
-                    blocking = tableau_stack[1]
+            if len(tableau_stack[1]) >= 4: #there must be at least 4 face down cards (one of the same color and rank and 3 this card is blocking)
+                if (card in tableau_stack[0]) and (opp_color in tableau_stack[1]): 
+                    #(card[0] == tableau_stack[0][-1][0]) and (card[1] == tableau_stack[0][-1][1]) and (opp_color[0] == tableau_stack[1][0][0]) and (opp_color[1] == tableau_stack[1][0][1]):
+                    #two cards of the same color and rank are in the same tableau stack where one is a face up card and the other is a face down card blocking at least 3 more face down cards
+                    opp_color_index = tableau_stack[1].index(opp_color) #index where opp_color card is
+                    blocking = []
+                    for k in range(len(tableau_stack[1])):
+                        if k > opp_color_index:
+                            blocking.append(tableau_stack[1][k])
+                    blocking = deque(blocking) #the cards that both cards of the same rank and color block
+
 
                     #these two cards have the same tableau build cards
                     tableau_build_cards = []
@@ -228,7 +235,7 @@ def detectUnwinnable(s): #need state from result(s,a) for each possible action r
                     elif ((card[0] == "H") or (card[0] == "D")) and (card[1] != 13):
                         tableau_build_cards = [["S",card[1]+1],["C",card[1]+1]]
 
-                    if (tableau_build_cards) and (tableau_build_cards[0] in blocking) or (tableau_build_cards[1] in blocking): #blocking one tableau build card
+                    if (tableau_build_cards) and ((tableau_build_cards[0] in blocking) or (tableau_build_cards[1] in blocking)): #blocking one tableau build card
                         for card2 in blocking:
                             for card3 in blocking:
                                 if (card2[1] < card[1]) and (card2[0] == card[0]) and (card3[1] < opp_color[1]) and (card3[0] == opp_color[0]): 
