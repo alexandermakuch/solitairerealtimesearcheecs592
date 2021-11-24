@@ -117,7 +117,7 @@ def get_actions(s):
     
     return actions
 
-def result(s: State,a):
+def result(s: State,a: dict):
     '''
     s - state
     a - action. this should be  [{'from':[bin idx, location in talon], 'to':[bin idx, stack, location in stack] } ]
@@ -132,12 +132,17 @@ def result(s: State,a):
         if a['to'][0] == 2: #to foundation
             s.foundation[a['to'][1]].appendleft(card) #need to check if this will be pop or popleft
         ## need to recalculate kplus talon here
-
     elif a['from'][0] == 1: #1 = from tableau
         if a['to'][0] == 1: #to tableau
-            pass
+            #multiple can be moved
+            temp = deque([])
+            for _ in range(a['from'][2]+1): #pop the number of times of the location (ind+1)
+                temp.append(s.tableau[a['from'][1]][0].popleft())
+            s.tableau[a['to'][1]][0].extendleft(temp)
+                
         if a['to'][0] == 2: #to foundation
-            pass
+            #only one can be moved
+            s.foundation[a['to'][1]].appendleft(s.tableau[a['from'][1]][0].popleft())
         #check if we need to reveal cards
         if len(s.tableau[a['from'][1]][0]) == 0:
             s.tableau[a['from'][1]][0] = deque(s.tableau[a['from'][1]][0].popleft())
@@ -294,9 +299,9 @@ def mns_rollout(s, hs, ns, a):
             
     return hs[0](s)
 
-def loop_check(s):
-    #Check for loop
-    pass
+def loop_check(s,cached_state):
+    return State.__eq__(s,cached_state)
+    
 #-----------------------------------------------------------------------------
 def cache_check(s,cache):
     for entry in cache:
