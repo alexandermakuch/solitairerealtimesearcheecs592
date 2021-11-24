@@ -1,6 +1,7 @@
 import numpy as np
 from deckGenerator import Kplus, State
 from collections import deque
+from deckGenerator import winGen
 # K+ initialization
 
 def opp_color_check(c1, c2):
@@ -250,6 +251,22 @@ def detectUnwinnable(s): #need state from result(s,a) for each possible action r
 
 
     return detectUnwinnable
+
+
+
+def win(s):
+    '''
+    check if the passed in state s is a win state
+    '''
+    #recreate win state for comparison
+    tableauWin, foundationWin, reachable_talonWin, unreachable_talonWin, stockWin, lensWin, classesWin = deckGenerator.winGen()
+    sWin = State(tableauWin, foundationWin, reachable_talonWin, unreachable_talonWin, stockWin, lensWin, classesWin)
+        
+    if s == sWin:
+        return True
+    else:
+        return False
+
 
 
 def greedy(s,h): #Takes in starting state and a heuristic function

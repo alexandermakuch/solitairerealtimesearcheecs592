@@ -4,7 +4,7 @@ import random
 from collections import deque
 from deckGenerator import State
 import deckGenerator
-from search import detectUnwinnable
+from search import detectUnwinnable, win
 
 
 
@@ -12,24 +12,20 @@ class HeuristicH1:
     def __init__(self):
         self.cache = [] #empty cache
 
-    def HeuristicString(tableau,foundation,reachable_talon,unreachable_talon):
+    def HeuristicString(self, s):
 
-        #recreate win state for comparison
-        tableauWin, foundationWin, reachable_talonWin, unreachable_talonWin, stockWin, lensWin, classesWin = deckGenerator.winGen()
-        sWin = State(tableauWin, foundationWin, reachable_talonWin, unreachable_talonWin, stockWin, lensWin, classesWin)
-        
-        if s == sWin: #but where does the state for comparision come from???
+        if win(s):
             return "WIN"
 
         elif detectUnwinnable(s):
             return "LOSS"
 
         else:
-            return HeuristicH1(tableau,foundation,reachable_talon,unreachable_talon)
+            return self.H1(s.tableau,s.foundation,s.reachable_talon,s.unreachable_talon)
 
 
 
-    def HeuristicH1(tableau,foundation,reachable_talon,unreachable_talon):
+    def H1(self, tableau,foundation,reachable_talon,unreachable_talon):
 
         deck = [] #to recreate the deck from the passed stacks
         tableau_face_down = []
@@ -117,22 +113,19 @@ class HeuristicH2:
     def __init__(self):
         self.cache = [] #empty cache
 
-    def HeuristicString(tableau,foundation,reachable_talon,unreachable_talon):
+    def HeuristicString(self, s):
 
-        #recreate win state for comparison
-        tableauWin, foundationWin, reachable_talonWin, unreachable_talonWin, stockWin, lensWin, classesWin = deckGenerator.winGen()
-        sWin = State(tableauWin, foundationWin, reachable_talonWin, unreachable_talonWin, stockWin, lensWin, classesWin)
-        
-        if s == sWin: #but where does the state for comparision come from???
+        if win(s):
             return "WIN"
 
         elif detectUnwinnable(s):
             return "LOSS"
 
         else:
-            return HeuristicH2(tableau,foundation,reachable_talon,unreachable_talon)
+            return self.H2(s.tableau,s.foundation,s.reachable_talon,s.unreachable_talon)
 
-    def HeuristicH2(tableau,foundation,reachable_talon,unreachable_talon):
+
+    def H2(tableau,foundation,reachable_talon,unreachable_talon):
 
         deck = [] #to recreate the deck from the passed stacks
         tableau_face_down = []
@@ -217,6 +210,9 @@ class HeuristicH2:
         return H2
 
 
+
+
+#new heuristic function
 
 
 
