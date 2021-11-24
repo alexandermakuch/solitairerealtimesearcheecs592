@@ -312,7 +312,7 @@ def cache_check(s,cache):
 
             
 #-----------------------------------------------------------------------------
-def mns_rollout_enhanced(s, hs, ns, a):
+def mns_rollout_enhanced(s, hs, ns, a, top_layer, path):
     if hs[0].h(s) == 'WIN': return 'WIN'
 
     if loop_check(s): return 'LOSS'    
@@ -326,7 +326,7 @@ def mns_rollout_enhanced(s, hs, ns, a):
         if len(hs) == 1:
             return hs[0](s)
         else:
-            return mns_rollout_enhanced(s,hs[1:],ns[1:])
+            return mns_rollout_enhanced(s,hs[1:],ns[1:], False, path)
         
     while hs[0].h(s) != 'LOSS':
         actions = get_actions(s)
@@ -334,7 +334,7 @@ def mns_rollout_enhanced(s, hs, ns, a):
         for act in actions:
             new_n = ns.copy()
             new_n[0] -= 1
-            val = mns_rollout_enhanced(result(s,act), hs, new_n, act)
+            val = mns_rollout_enhanced(result(s,act), hs, new_n, act, False, path)
             
             if isinstance(val, str):
             
@@ -346,23 +346,24 @@ def mns_rollout_enhanced(s, hs, ns, a):
                         best_val = -10000
                         best_a = act 
             else:
-                if val > best_val or val == 'WIN':
+                if val > best_val:
                     best_val = val
                     best_a = act
                     
         if best_val == 'WIN':
             return 'WIN'
-        if best_val == 'LOSS' or (len(hs) != 0 and best_val < hs[0].h(s)):
-            if len(hs)==1: return hs[0].h(s)
-            else: return mns_rollout_enhanced(result(s,best_a,hs[1:],ns[1:]))
+        if best_val == 'LOSS' or (len(hs) != 0 and best_val < hs[0].h(s)): #Loss or local maxima found at nesting level > 0
+            if len(hs)==1: return hs[0].h(s) #Zero nesting level
+            else: return mns_rollout_enhanced(result(s,best_a,hs[1:],ns[1:]), False, path)
         
             
         s = result(s,best_a)
         if ns[0] != 0 and len(hs[0].cache) < 5000: #Only cache at non-zero nesting levels
             hs[0].cache.append(s) #Appends to appropriate heuristic
-            hs[0].n.append(ns[0])
+            hs[0].n.append(ns[0]) #Save nesting level of heuristic
                     
-                
-            #implement way to store the path we take
+        if top_layer:
+            path.append(s)
+
             
 #-----------------------------------------------------------------------------
