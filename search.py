@@ -259,7 +259,7 @@ def win(s):
     check if the passed in state s is a win state
     '''
     #recreate win state for comparison
-    tableauWin, foundationWin, reachable_talonWin, unreachable_talonWin, stockWin, lensWin, classesWin = deckGenerator.winGen()
+    tableauWin, foundationWin, reachable_talonWin, unreachable_talonWin, stockWin, lensWin, classesWin = winGen()
     sWin = State(tableauWin, foundationWin, reachable_talonWin, unreachable_talonWin, stockWin, lensWin, classesWin)
         
     if s == sWin:
@@ -323,8 +323,15 @@ def mns_rollout(s, hs, ns, a):
             
     return hs[0](s)
 
-def loop_check(s,cached_state):
-    return State.__eq__(s,cached_state)
+def loop_check(s,cached_state: list):
+    '''
+    Needed: what data structure will the cached states be in?
+    Also, how is "nesting level" of current state determined?
+    '''
+    for cached in cached_state:
+        if State.__eq__(s,cached): 
+            return True
+    return False
     
 #-----------------------------------------------------------------------------
 def cache_check(s,cache):
