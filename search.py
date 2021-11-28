@@ -1,5 +1,5 @@
 import numpy as np
-from deckGenerator import Kplus, State
+from deckGenerator import Kplus, State, tableauGen
 from collections import deque
 from deckGenerator import winGen
 # K+ initialization
@@ -398,3 +398,125 @@ def mns_rollout_enhanced(s, hs, ns, a, top_layer, path):
 
             
 #-----------------------------------------------------------------------------
+
+
+def reveal_face_down(s: State, a: dict):
+    '''
+    Input: current state s and action a
+    Output: True if taking action a in state s will reveal a face down card, False otherwise.
+    Function should only be called when the 'from' key of the action == 1 (when we are moving from the tableau)
+    '''
+
+    sprime = result(s,a)
+
+    for tab_idx in range(len(s.tableau)):
+        s_tableau_stack = s.tableau[tab_idx]
+        sprime_tableau_stack = sprime.tableau[tab_idx]
+
+        if len(s_tableau_stack[1]) < len(sprime_tableau_stack[1]): #if state s has less face down cards than sprime
+            return True
+
+    return False
+
+
+#0: talon, tal_idx is the index of the card you are moving from the reachable talon
+#1: tableau, 0-6, the depth of cards to move starting at 0 (relevant for tableau to tableau)
+#2: foundation, 0-3 for the foundation stack
+
+def best_action(s: State, possible_actions):
+    '''
+    Inputs: current state s and list of possible actions in state s
+    Output: the best action as a dictionary
+    Explanation: the best action is based on action ordering from the paper. The heuristic is only used for tie-breaking.
+    TODO: additional ordering from strategy guide, call right heuristic, test code
+    '''
+
+    if len(possible_actions) == 1: #there is only one possible action
+        return possible_actions[0]
+    
+    if len(possible_actions) == 0: #there are no possible actions
+        return []
+
+    
+    a01_actions = [] #actions that move a card from tableau to foundation and reveal a face down card
+    a02_actions = [] #actions that move a card to the foundation
+    a03_actions = [] #actions that move a card from tableau to tableau and reveal a face down card
+    a04_actions = [] #actions that move a card from the talon to the tableau
+    a05_actions = [] #actions that move a card from the foundation to the tableau
+    a06_actions = [] #actions that move a card from tableau to tableau and do not reveal a face down card
+    a07_actions = [] #all other actions. Just to check but this should never happen.
+
+    for action in possible_actions:
+        if (action['from'][0] == 1) and (action['to'][0] == 2) and (reveal_face_down(s,action)): #action that moves card from tableau to foundation and reveals a face down card
+            a01_actions.append(action)
+        elif action['to'][0] == 2: #action that moves card to foundation
+            a02_actions.append(action)
+        elif (action['from'][0] == 1) and (action['to'][0] == 1) and (reveal_face_down(s,action)): #action that moves card from tableau to tableau and reveals a face down card
+            a03_actions.append(action)
+        elif (action['from'][0] == 0) and (action['to'][0] == 1): #action that moves card from talon to tableau
+            a04_actions.append(action)
+        elif (action['from'][0] == 2) and (action['to'][0] == 1): #action that moves card from foundation to tableau
+            a05_actions.append(action)
+        elif (action['from'][0] == 1) and (action['to'][0] == 1): #action that moves card from tableau to tableau and does not reveal a face down card
+            a06_actions.append(action)
+        else:
+            a07_actions.append(action) #all other actions
+
+    best_val = -float('inf')
+    best_act = None
+
+    if len(a01_actions) > 0:
+        for action in a01_actions:
+            val = HEURISTIC(result(s,action)) #???How do we call heuristic? And how do we know which heuristic to use?
+            if  val > best_val:
+                best_val = val
+                best_act = action
+        return best_act
+
+    if len(a02_actions) > 0:
+        for action in a02_actions:
+            val = HEURISTIC(result(s,action)) #???How do we call heuristic? And how do we know which heuristic to use?
+            if  val > best_val:
+                best_val = val
+                best_act = action
+        return best_act
+
+    if len(a03_actions) > 0:
+        for action in a03_actions:
+            val = HEURISTIC(result(s,action)) #???How do we call heuristic? And how do we know which heuristic to use?
+            if  val > best_val:
+                best_val = val
+                best_act = action
+        return best_act
+
+    if len(a04_actions) > 0:
+        for action in a04_actions:
+            val = HEURISTIC(result(s,action)) #???How do we call heuristic? And how do we know which heuristic to use?
+            if  val > best_val:
+                best_val = val
+                best_act = action
+        return best_act
+
+    if len(a05_actions) > 0:
+        for action in a05_actions:
+            val = HEURISTIC(result(s,action)) #???How do we call heuristic? And how do we know which heuristic to use?
+            if  val > best_val:
+                best_val = val
+                best_act = action
+        return best_act
+
+    if len(a06_actions) > 0:
+        for action in a06_actions:
+            val = HEURISTIC(result(s,action)) #???How do we call heuristic? And how do we know which heuristic to use?
+            if  val > best_val:
+                best_val = val
+                best_act = action
+        return best_act
+
+    if len(a07_actions) > 0:
+        for action in a07_actions:
+            val = HEURISTIC(result(s,action)) #???How do we call heuristic? And how do we know which heuristic to use?
+            if  val > best_val:
+                best_val = val
+                best_act = action
+        return best_act
