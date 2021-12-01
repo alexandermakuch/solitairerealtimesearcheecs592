@@ -3,7 +3,6 @@
 import random
 from collections import deque
 from deckGenerator import State
-import deckGenerator
 from search import detectUnwinnable, win
 
 

@@ -2,7 +2,8 @@ from collections import deque
 import deckGenerator
 from heuristics import HeuristicH1, HeuristicH2
 from deckGenerator import State, Kplus, initKplus
-from search import detectUnwinnable, get_actions
+from search import detectUnwinnable, get_actions, result
+from state_setter import state_setter
 import copy
 import numpy as np
 
@@ -12,21 +13,28 @@ deck = deckGenerator.deckGen()
 #print(len(deck))
 
 #initialize the game by partitioning the deck
-tableau = deckGenerator.tableauGen(deck)
-foundation = deckGenerator.foundationGen()
-stock = deckGenerator.StockGen(deck)
+random_game = True
+if random_game:
+    tableau = deckGenerator.tableauGen(deck)
+    foundation = deckGenerator.foundationGen()
+    stock = deckGenerator.StockGen(deck)
+    
+else:
+    stock,foundation,tableau = state_setter()
+    
 lens= np.array([3,3,3,3,3,3,3,3])
 classes = np.tile(np.array([0,0,1]),8)
 reachable_talon, unreachable_talon = initKplus(stock)
 
 s0 = State(tableau, foundation, reachable_talon, unreachable_talon, stock, lens, classes)
+s0.printDeck()
+
 
 #unique = deckGenerator.isUniqueDeck(deck)
 unique = s0.isUniqueStacks()
 if not unique:
     raise ValueError("ERROR Initializing: cards are not unique")
 
-s0.printDeck()
 s0.printDeckLength()
 
 

@@ -252,10 +252,10 @@ def StockGen(Deck):
     return Stock
 
 def foundationGen():
-    foundation1 = [] #for spades
-    foundation2 = [] #for clubs
-    foundation3 = [] #for hearts
-    foundation4 = [] #for diamonds
+    foundation1 = deque([]) #for spades
+    foundation2 = deque([]) #for clubs
+    foundation3 = deque([]) #for hearts
+    foundation4 = deque([]) #for diamonds
     Foundation = [foundation1,foundation2,foundation3,foundation4]
     return Foundation
 

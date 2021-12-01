@@ -1,11 +1,34 @@
 """
 Solitaire clone: From python arcade wiki https://api.arcade.academy/en/latest/tutorials/card_game/index.html adapted for our use
 """
+
+from collections import deque
+import time
+import deckGenerator
+from heuristics import HeuristicH1, HeuristicH2
+from deckGenerator import State, Kplus, initKplus
+from search import detectUnwinnable, get_actions, result
+import numpy as np
+
+#Generate a random deck of cards
+deck = deckGenerator.deckGen()
+#print(deck)
+#print(len(deck))
+
+#initialize the game by partitioning the deck
+tableau = deckGenerator.tableauGen(deck)
+foundation = deckGenerator.foundationGen()
+stock = deckGenerator.StockGen(deck)
+lens= np.array([3,3,3,3,3,3,3,3])
+classes = np.tile(np.array([0,0,1]),8)
+reachable_talon, unreachable_talon = initKplus(stock)
+
+s0 = State(tableau, foundation, reachable_talon, unreachable_talon, stock, lens, classes)
+
 from typing import Optional
 
 import random
 import arcade
-from collections import deque
 
 new_reachable_talon = deque([])
 new_unreachable_talon = deque([])
@@ -32,35 +55,27 @@ lookup_dict = {
     13: 'K'
 }
 
-counter = 0
 
 def load_stacks(reachable_talon, unreachable_talon, foundation, tableau):
-    global counter
-    counter += 1
     new_reachable_talon = deque([])
     new_unreachable_talon = deque([])
     new_foundation = deque([deque([]),deque([]),deque([]),deque([])])
     new_tableau = deque([[deque([]), deque([])],[deque([]), deque([])],[deque([]), deque([])],[deque([]), deque([])],[deque([]), deque([])],[deque([]), deque([])],[deque([]), deque([])]])
     for x in reachable_talon:
-        print(x)
         new_reachable_talon.append([lookup_dict.get(x[0]),lookup_dict.get(x[1])])
     for x in unreachable_talon:
-        print(x)
         new_unreachable_talon.append([lookup_dict.get(x[0]),lookup_dict.get(x[1])])
     for y in range(4):
         for x in foundation[y]:
-            print(x)
             new_foundation[y].append([lookup_dict.get(x[0]),lookup_dict.get(x[1])])
-            print(new_foundation[y])
     for y in range(7):
         for z in range(2):
             for x in tableau[y][z]:
-                print(x)
                 new_tableau[y][z].appendleft([lookup_dict.get(x[0]),lookup_dict.get(x[1])])
     return new_reachable_talon, new_unreachable_talon, new_foundation, new_tableau
 
 def initGame(reachable_talon, unreachable_talon, foundation, tableau):
-    counter = 0
+    
     for x in reachable_talon:
         new_reachable_talon.append([lookup_dict.get(x[0]),lookup_dict.get(x[1])])
     for x in unreachable_talon:
@@ -68,13 +83,10 @@ def initGame(reachable_talon, unreachable_talon, foundation, tableau):
     for y in range(4):
         for x in foundation[y]:
             new_foundation[y].append([lookup_dict.get(x[0]),lookup_dict.get(x[1])])
-            print(new_foundation[y])
     for y in range(7):
         for z in range(2):
             for x in tableau[y][z]:
-                print(x)
                 new_tableau[y][z].appendleft([lookup_dict.get(x[0]),lookup_dict.get(x[1])])
-    #main()
 
 def update(reachable_talon, unreachable_talon, foundation, tableau):
     new_reachable_talon = deque([])
@@ -83,6 +95,8 @@ def update(reachable_talon, unreachable_talon, foundation, tableau):
     new_tableau = deque([[deque([]), deque([])],[deque([]), deque([])],[deque([]), deque([])],[deque([]), deque([])],[deque([]), deque([])],[deque([]), deque([])],[deque([]), deque([])]])
     new_reachable_talon, new_unreachable_talon, new_foundation, new_tableau = load_stacks(reachable_talon,unreachable_talon,foundation,tableau)
     #main()
+
+new_reachable_talon, new_unreachable_talon, new_foundation, new_tableau= load_stacks(s0.reachable_talon, s0.unreachable_talon, s0.foundation, s0.tableau)
 
 # Screen title and size
 SCREEN_WIDTH = 1024
@@ -296,16 +310,35 @@ class MyGame(arcade.Window):
                 self.pull_to_top(card)
                 self.piles[x+2][-1].face_up()
     def on_key_press(self, symbol: int, modifiers: int):
-        if counter != 0:
-            self.setup2()
-            self.card_list.update()
+            
         """ User presses key """
         if symbol == arcade.key.R:
             # Restart
-            self.setup()
+            self.close()
 
-    #def on_update(self, delta_time: float):
+        if symbol == arcade.key.P:
 
+            time.sleep(3)
+
+    def on_update(self, delta_time: float):
+        global s0
+
+        x = get_actions(s0)
+
+        if not x:
+            print("no actions")
+            time.sleep(5)
+
+        
+
+
+        s0 = result(s0, x[random.randint(0,len(x)-1)])
+
+        global new_foundation, new_reachable_talon, new_tableau, new_unreachable_talon
+        new_reachable_talon, new_unreachable_talon, new_foundation, new_tableau= load_stacks(s0.reachable_talon, s0.unreachable_talon, s0.foundation, s0.tableau)
+        self.setup2()
+        self.card_list.update()
+        time.sleep(1/3)
 
     def on_draw(self):
         """ Render the screen. """
