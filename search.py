@@ -419,11 +419,79 @@ def reveal_face_down(s: State, a: dict):
         s_tableau_stack = s.tableau[tab_idx]
         sprime_tableau_stack = sprime.tableau[tab_idx]
 
-        if len(s_tableau_stack[1]) < len(sprime_tableau_stack[1]): #if state s has less face down cards than sprime
+        if len(s_tableau_stack[1]) > len(sprime_tableau_stack[1]): #if state s has more face down cards than sprime
             return True
 
     return False
 
+
+def foundation_progression(s: State, a: dict):
+    '''
+    Input: current state s and action a
+    Output: True if all cards of rank two less are already in the foundation or card is an Ace or 2; False otherwise
+    True means that foundation has progressed sufficiently that this action should not be taken
+    '''
+    foundation_stack_idx = a['from'][1]
+    card = s.foundation[foundation_stack_idx][-1] #last card in this foundation stack is the one that is being moved
+
+    if (card[1] == 1) or (card[1] == 2): #card is an Ace or a 2
+        return True
+
+    cards_rank_two_less = []
+    Suits = ["D", "C", "H", "S"]
+    ranks_two_less = [card[1]-1, card[1]-2]
+    for i in Suits:
+        for j in ranks_two_less:
+            cards_rank_two_less.append([i,j])
+
+    for card2 in cards_rank_two_less:
+        if (card2 in s.foundation[0]) or (card2 in s.foundation[1]) or (card2 in s.foundation[2]) or (card2 in s.foundation[3]):
+            continue
+        else:
+            return False
+
+    return True
+
+def KingToTableau(s: State, a: dict):
+    '''
+    Input: current state s and action a
+    Output: True if moving a King that is not the bottom-most card in the tableau stack to leftmost empty tableau stack; False otherwise
+    if the card is not a King, True is returned since KingToTableau is not relevant for this action
+    '''
+    if a['from'][0] == 1: #moving King from tableau to tableau
+        tableau_stack_idx = a['from'][1]
+        card_idx = a['from'][2]
+
+        card = s.tableau[tableau_stack_idx][0][card_idx]
+        if card[1] != 13: #not a King
+            return True
+
+        bottom_most = False
+        face_down_cards = s.tableau[tableau_stack_idx][1]
+        if len(face_down_cards) == 0:
+            bottom_most = True
+
+        if bottom_most:
+            return False
+
+    #moving valid King from tableau to tableau OR King from talon to tableau OR King from foundation to tableau
+    
+    multiple_empty_tableau_stacks = False
+    empty_tableau_stacks_count = 0
+    for tableau_stack in s.tableau:
+        if len(tableau_stack[0]) == 0: #there are no face up cards in this stack so it must be empty
+            empty_tableau_stacks_count += 1
+    if empty_tableau_stacks_count >= 2:
+        multiple_empty_tableau_stacks = True
+
+    if not(multiple_empty_tableau_stacks):
+        return True
+
+    tableau_to_stack_idx = a['to'][1]
+    if tableau_to_stack_idx == 0:
+        return True
+
+    return False
 
 #0: talon, tal_idx is the index of the card you are moving from the reachable talon
 #1: tableau, 0-6, the depth of cards to move starting at 0 (relevant for tableau to tableau)
@@ -432,9 +500,9 @@ def reveal_face_down(s: State, a: dict):
 def best_action(s: State, possible_actions):
     '''
     Inputs: current state s and list of possible actions in state s
-    Output: the best action as a dictionary
-    Explanation: the best action is based on action ordering from the paper. The heuristic is only used for tie-breaking.
-    TODO: additional ordering from strategy guide, call right heuristic, test code
+    Output: the best actions as a dictionary
+    Explanation: the best actions is based on action ordering from the paper. The heuristic is only used for tie-breaking, which is not done in this function.
+    TODO: additional ordering from strategy guide?
     '''
 
     if len(possible_actions) == 1: #there is only one possible action
@@ -453,76 +521,119 @@ def best_action(s: State, possible_actions):
     a07_actions = [] #all other actions. Just to check but this should never happen.
 
     for action in possible_actions:
+
+        card = None
+        if action['from'][0] == 1: #moving from tableau
+            tableau_stack_idx = action['from'][1]
+            card_idx = action['from'][2]
+            card = s.tableau[tableau_stack_idx][0][card_idx]
+        elif action['from'][0] == 0: #moving from talon
+            card_idx = action['from'][1]
+            card = s.reachable_talon[card_idx]
+        elif action['from'][0] == 2: #moving from foundation
+            foundation_stack_idx = action['from'][1]
+            card = s.foundation[foundation_stack_idx][-1]
+
+
         if (action['from'][0] == 1) and (action['to'][0] == 2) and (reveal_face_down(s,action)): #action that moves card from tableau to foundation and reveals a face down card
             a01_actions.append(action)
+        
         elif action['to'][0] == 2: #action that moves card to foundation
             a02_actions.append(action)
+        
         elif (action['from'][0] == 1) and (action['to'][0] == 1) and (reveal_face_down(s,action)): #action that moves card from tableau to tableau and reveals a face down card
-            a03_actions.append(action)
+            if (card[1] == 13): #card being moved is a King
+                if (KingToTableau(s,action)):
+                    a03_actions.append(action)
+            else:
+                a03_actions.append(action)
+        
         elif (action['from'][0] == 0) and (action['to'][0] == 1): #action that moves card from talon to tableau
-            a04_actions.append(action)
-        elif (action['from'][0] == 2) and (action['to'][0] == 1): #action that moves card from foundation to tableau
-            a05_actions.append(action)
+            if (card[1] == 13): #card being moved is a King
+                if (KingToTableau(s,action)):
+                    a04_actions.append(action)
+            else:
+                a04_actions.append(action)
+
+        elif (action['from'][0] == 2) and (action['to'][0] == 1) and (not(foundation_progression(s,action))): #action that moves card from foundation to tableau
+            if (card[1] == 13): #card being moved is a King
+                if (KingToTableau(s,action)):
+                    a05_actions.append(action)
+            else:
+                a05_actions.append(action)
+
         elif (action['from'][0] == 1) and (action['to'][0] == 1): #action that moves card from tableau to tableau and does not reveal a face down card
-            a06_actions.append(action)
+            if (card[1] == 13): #card being moved is a King
+                if (KingToTableau(s,action)):
+                    a06_actions.append(action)
+            else:
+                a06_actions.append(action)
+
         else:
             a07_actions.append(action) #all other actions
 
-    best_val = -float('inf')
-    best_act = None
+    #best_val = -float('inf')
+    #best_act = None
 
     if len(a01_actions) > 0:
-        for action in a01_actions:
-            val = HEURISTIC(result(s,action)) #???How do we call heuristic? And how do we know which heuristic to use?
-            if  val > best_val:
-                best_val = val
-                best_act = action
-        return best_act
+        # for action in a01_actions:
+        #     val = HEURISTIC(result(s,action)) #???How do we call heuristic? And how do we know which heuristic to use?
+        #     if  val > best_val:
+        #         best_val = val
+        #         best_act = action
+        # return best_act
+        return a01_actions
 
     if len(a02_actions) > 0:
-        for action in a02_actions:
-            val = HEURISTIC(result(s,action)) #???How do we call heuristic? And how do we know which heuristic to use?
-            if  val > best_val:
-                best_val = val
-                best_act = action
-        return best_act
+        # for action in a02_actions:
+        #     val = HEURISTIC(result(s,action)) #???How do we call heuristic? And how do we know which heuristic to use?
+        #     if  val > best_val:
+        #         best_val = val
+        #         best_act = action
+        # return best_act
+        return a02_actions
 
     if len(a03_actions) > 0:
-        for action in a03_actions:
-            val = HEURISTIC(result(s,action)) #???How do we call heuristic? And how do we know which heuristic to use?
-            if  val > best_val:
-                best_val = val
-                best_act = action
-        return best_act
+        # for action in a03_actions:
+        #     val = HEURISTIC(result(s,action)) #???How do we call heuristic? And how do we know which heuristic to use?
+        #     if  val > best_val:
+        #         best_val = val
+        #         best_act = action
+        # return best_act
+        return a03_actions
 
     if len(a04_actions) > 0:
-        for action in a04_actions:
-            val = HEURISTIC(result(s,action)) #???How do we call heuristic? And how do we know which heuristic to use?
-            if  val > best_val:
-                best_val = val
-                best_act = action
-        return best_act
+        # for action in a04_actions:
+        #     val = HEURISTIC(result(s,action)) #???How do we call heuristic? And how do we know which heuristic to use?
+        #     if  val > best_val:
+        #         best_val = val
+        #         best_act = action
+        # return best_act
+        return a04_actions
 
     if len(a05_actions) > 0:
-        for action in a05_actions:
-            val = HEURISTIC(result(s,action)) #???How do we call heuristic? And how do we know which heuristic to use?
-            if  val > best_val:
-                best_val = val
-                best_act = action
-        return best_act
+        # for action in a05_actions:
+        #     val = HEURISTIC(result(s,action)) #???How do we call heuristic? And how do we know which heuristic to use?
+        #     if  val > best_val:
+        #         best_val = val
+        #         best_act = action
+        # return best_act
+        return a05_actions
 
     if len(a06_actions) > 0:
-        for action in a06_actions:
-            val = HEURISTIC(result(s,action)) #???How do we call heuristic? And how do we know which heuristic to use?
-            if  val > best_val:
-                best_val = val
-                best_act = action
-        return best_act
+        # for action in a06_actions:
+        #     val = HEURISTIC(result(s,action)) #???How do we call heuristic? And how do we know which heuristic to use?
+        #     if  val > best_val:
+        #         best_val = val
+        #         best_act = action
+        # return best_act
+        return a06_actions
 
     if len(a07_actions) > 0:
-        for action in a07_actions:
-            val = HEURISTIC(result(s,action)) #???How do we call heuristic? And how do we know which heuristic to use?
-            if  val > best_val:
-                best_val = val
-                best_act = action
-        return best_act
+        # for action in a07_actions:
+        #     val = HEURISTIC(result(s,action)) #???How do we call heuristic? And how do we know which heuristic to use?
+        #     if  val > best_val:
+        #         best_val = val
+        #         best_act = action
+        # return best_act
+        return a07_actions
