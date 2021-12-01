@@ -497,7 +497,7 @@ def KingToTableau(s: State, a: dict):
 #1: tableau, 0-6, the depth of cards to move starting at 0 (relevant for tableau to tableau)
 #2: foundation, 0-3 for the foundation stack
 
-def best_action(s: State, possible_actions):
+def prune_actions(s: State, possible_actions):
     '''
     Inputs: current state s and list of possible actions in state s
     Output: the best actions as a dictionary

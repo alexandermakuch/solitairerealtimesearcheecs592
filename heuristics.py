@@ -8,8 +8,10 @@ from search import detectUnwinnable, win
 
 
 class HeuristicH1:
-    def __init__(self):
+    def __init__(self, nesting_level):
         self.cache = [] #empty cache
+        self.nestingCache = []
+        self.nestingLevel = nesting_level
 
     def HeuristicStringH1(self, s):
 
@@ -109,8 +111,10 @@ class HeuristicH1:
 
 
 class HeuristicH2:
-    def __init__(self):
+    def __init__(self, nesting_level):
         self.cache = [] #empty cache
+        self.nestingCache = []
+        self.nestingLevel = nesting_level
 
     def HeuristicStringH2(self, s):
 
@@ -225,8 +229,10 @@ class HeuristicH2:
 
 
 class HeuristicH3:
-    def __init__(self):
+    def __init__(self, nesting_level):
         self.cache = [] #empty cache
+        self.nestingCache = []
+        self.nestingLevel = nesting_level
 
     def HeuristicStringH3(self, s):
 
