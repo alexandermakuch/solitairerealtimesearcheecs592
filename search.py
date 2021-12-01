@@ -1,7 +1,7 @@
 import numpy as np
-from deckGenerator import Kplus, State
+from deckGenerator import Kplus, State, winGen
 from collections import deque
-from deckGenerator import winGen
+#from heuristics import HeuristicH1, HeuristicH2
 # K+ initialization
 
 def opp_color_check(c1, c2):
@@ -22,17 +22,16 @@ def get_actions(s):
     
     #See where Talon cards can be moved:
     for tal_idx, card in enumerate(s.reachable_talon):
-        
         #Talon to tableau
         for tab_idx, stack in enumerate(s.tableau):
-            if stack:
-                #If tableau end is different colors and one number higher than talon card
-                if opp_color_check(card, stack[0]) and stack[0][1] - card[1] == 1:
-                    new_entry = {'from':[0, tal_idx], 'to':[1,tab_idx,0]}
-                    actions.append(new_entry)
+            if stack[0]:
+                if opp_color_check(card, stack[0][0]) and stack[0][0][1] - card[1] == 1:
+                     new_entry = {'from':[0, tal_idx], 'to':[1,tab_idx,0]}
+                     actions.append(new_entry)
             elif card[1] == 13: #King
+                print("elif")
                 new_entry = {'from':[0,tal_idx], 'to':[1,tab_idx,0]}
-        
+                actions.append(new_entry)
         #Talon to foundation
         for found_idx, stack in enumerate(s.foundation):
             if stack: #Make sure there's cards in the stack
@@ -62,7 +61,7 @@ def get_actions(s):
             card = stack[0][stack_depth]
             
             for si2, stack2 in enumerate(s.tableau): #Iterate through each card in stack
-                if stack2:
+                if stack2[0]:
                     if opp_color_check(card,stack2[0][0]) and stack2[0][0][1] - card[1] == 1:
                         #Append a card if stack_depth = 0, append a bundle of cards starting from stack_depth
                         #if stack_depth > 0
@@ -70,51 +69,51 @@ def get_actions(s):
                         actions.append(new_entry)
                 elif card[1] == 13: #Empty stack, and king
                     new_entry = {'from':[1,stack_idx,stack_depth], 'to':[1,si2,0]}
-
+                    actions.append(new_entry)
             #If next card in stack can't be moved, stop looping through stack
             if stack_depth < len(stack[0])-1:
-                if stack[0][stack_depth+1][1] - stack[stack_depth][1] != 1: 
+                if stack[0][stack_depth+1][1] - stack[0][stack_depth][1] != 1: 
                     break
                     
     
         #Tableau to foundation:
-        for found_idx, found_stack in enumerate(s.foundation):
-            if found_stack: #Verify it's not empty
-                if stack[0][0] == found_stack[0] and found_stack[0][1] - stack[0][1] == 1:
-                    new_entry = {'from':[1,stack_idx,0], 'to':[2,found_idx]}
-                    actions.append(new_entry)
-            else: #Empty foundation stack
-                if stack[0][0][1] == 1: #Is ace
-                    if found_idx == 0:
-                        suit = 'D'
-                    elif found_idx == 1:
-                        suit = 'C'
-                    elif found_idx == 2:
-                        suit = 'H'
-                    elif found_idx == 3:
-                        suit = 'S'
-                    
-                
-                    if stack[0][0][0] == suit: #Matchs stack suit
+        if stack[0]:
+            for found_idx, found_stack in enumerate(s.foundation):
+                if found_stack: #Verify it's not empty
+                    if stack[0][0][0] == found_stack[0][0] and stack[0][0][1] - found_stack[0][1] == 1:
                         new_entry = {'from':[1,stack_idx,0], 'to':[2,found_idx]}
                         actions.append(new_entry)
+                else: #Empty foundation stack
+                    if stack[0][0][1] == 1: #Is ace
+                        if found_idx == 0:
+                            suit = 'D'
+                        elif found_idx == 1:
+                            suit = 'C'
+                        elif found_idx == 2:
+                            suit = 'H'
+                        elif found_idx == 3:
+                            suit = 'S'
+                        
                     
+                        if stack[0][0][0] == suit: #Matchs stack suit
+                            new_entry = {'from':[1,stack_idx,0], 'to':[2,found_idx]}
+                            actions.append(new_entry)
+                        
  #------------------------------------------------------------------------------------------------------- 
     #See where foundation cards can be moved to
     for stack_idx, stack in enumerate(s.foundation):
         #Foundation to tableau
         if stack:
             for tab_idx, tab_stack in enumerate(s.tableau):
-                if tab_stack: #Nonempty tableau stack
-
-                    if opp_color_check(stack[0][0], tab_stack[0][0]) and tab_stack[0][1] - stack[0][1] == 1:
+                if tab_stack[0]: #Nonempty tableau stack
+                    if opp_color_check(stack[0][0], tab_stack[0][0][0]) and tab_stack[0][0][1] - stack[0][1] == 1:
                         #Move card from foundation to end of a tableau stack
                         new_entry = {'from':[2,stack_idx], 'to':[1,tab_idx,0]}
-                        
+                        #actions.append(new_entry)
                 else: #Empty tableau stack
-                    if tab_stack[0][1] == 13:
+                    if stack[0][1] == 13:
                         new_entry = {'from':[2,stack_idx], 'to':[1,tab_idx,0]}
-    
+                        #actions.append(new_entry)
     
     return actions
 
@@ -125,7 +124,6 @@ def result(s: State,a: dict):
     '''
 
     if a['from'][0] == 0: #0 = from reachable_talon
-
         card = s.reachable_talon[a['from'][1]]
         s.stock, s.lens, s.reachable_talon, s.unreachable_talon, s.classes = Kplus(card, s.stock, s.lens, s.classes)
         if a['to'][0] == 1: #to tableau
@@ -134,23 +132,27 @@ def result(s: State,a: dict):
             s.foundation[a['to'][1]].appendleft(card) #need to check if this will be pop or popleft
         ## need to recalculate kplus talon here
     elif a['from'][0] == 1: #1 = from tableau
+        tab_stack = a['from'][1]
         if a['to'][0] == 1: #to tableau
             #multiple can be moved
             temp = deque([])
             for _ in range(a['from'][2]+1): #pop the number of times of the location (ind+1)
-                temp.append(s.tableau[a['from'][1]][0].popleft())
+                xx = s.tableau[a['from'][1]][0].popleft()
+                temp.appendleft(xx)
             s.tableau[a['to'][1]][0].extendleft(temp)
                 
         if a['to'][0] == 2: #to foundation
             #only one can be moved
-            s.foundation[a['to'][1]].appendleft(s.tableau[a['from'][1]][0].popleft())
+            xx = s.tableau[tab_stack][0].popleft()
+            s.foundation[a['to'][1]].appendleft(xx)
         #check if we need to reveal cards
-        if len(s.tableau[a['from'][1]][0]) == 0:
-            s.tableau[a['from'][1]][0] = deque(s.tableau[a['from'][1]][0].popleft())
+        if len(s.tableau[tab_stack][0]) == 0 and s.tableau[tab_stack][1]:
+            s.tableau[tab_stack][0].appendleft(s.tableau[tab_stack][1].popleft())
 
     elif a['from'][0] == 2: #2 = from foundation
         #cards from foundation can only be moved to the tableau 
-        s.tableau[a['to'][1]][0].appendleft(s.foundation[a['from'][1]].popleft()) #need to check if this will be pop or popleft
+        xx = s.foundation[a['from'][1]].popleft()
+        s.tableau[a['to'][1]][0].appendleft(xx) #need to check if this will be pop or popleft
     else:
         print("ERROR INVALID INDEX")
         return 0
@@ -323,12 +325,16 @@ def mns_rollout(s, hs, ns, a):
             
     return hs[0](s)
 
-def loop_check(s,cached_state: list):
+def loop_check(s):
     '''
     Needed: what data structure will the cached states be in?
     Also, how is "nesting level" of current state determined?
     '''
-    for cached in cached_state:
+
+    for cached in HeuristicH1.cache:
+        if State.__eq__(s,cached): 
+            return True
+    for cached in HeuristicH2.cache:
         if State.__eq__(s,cached): 
             return True
     return False
