@@ -87,6 +87,8 @@ class HeuristicH1:
                     tableau_build_cards = [["H",card[1]+1],["D",card[1]+1]]
                 elif ((card[0] == "H") or (card[0] == "D")) and (card[1] != 13):
                     tableau_build_cards = [["S",card[1]+1],["C",card[1]+1]]
+
+                blocking = []
                     
                 for tableau_stack in tableau:
                     if (card[0] == tableau_stack[0][-1][0]) and (card[1] == tableau_stack[0][-1][1]): #for this card to be blocking, it has to be the last face up card in a tableau stack 
@@ -96,6 +98,8 @@ class HeuristicH1:
                         #    break
                         blocking = tableau_stack[1]
                         break
+
+
                 
                     for card2 in blocking: 
                         if card2 in tableau_build_cards: #number 6 in table1

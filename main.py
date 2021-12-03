@@ -7,6 +7,8 @@ from search import mns_rollout_enhanced
 from state_setter import state_setter
 import copy
 import numpy as np
+import sys
+sys.setrecursionlimit(5000)
 
 #Generate a random deck of cards
 deck = deckGenerator.deckGen()
