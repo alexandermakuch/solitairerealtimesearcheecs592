@@ -10,7 +10,7 @@ from search import detectUnwinnable, win
 class HeuristicH1:
     def __init__(self, nesting_level):
         self.cache = [] #empty cache
-        self.nestingCache = []
+        self.n_cache = []
         self.nestingLevel = nesting_level
 
     def HeuristicStringH1(self, s):
@@ -26,8 +26,13 @@ class HeuristicH1:
 
 
 
-    def H1(self, tableau,foundation,reachable_talon,unreachable_talon):
-
+    def h(self, s):
+        tableau = s.tableau
+        foundation = s.foundation
+        reachable_talon = s.reachable_talon
+        unreachable_talon = s.unreachable_talon
+        
+        #What's all this stuff below?
         deck = [] #to recreate the deck from the passed stacks
         tableau_face_down = []
         tableau_face_up = []
@@ -92,13 +97,13 @@ class HeuristicH1:
                         blocking = tableau_stack[1]
                         break
                 
-                for card2 in blocking: 
-                    if card2 in tableau_build_cards: #number 6 in table1
-                        h1 = -10
-                        break
-                    elif card2[1] < card[1]: #number 5 in table 1
-                        h1 = -5
-                        break
+                    for card2 in blocking: 
+                        if card2 in tableau_build_cards: #number 6 in table1
+                            h1 = -10
+                            break
+                        elif card2[1] < card[1]: #number 5 in table 1
+                            h1 = -5
+                            break
 
             else: #I dont think this should be needed as every card should fall into a category. Is the K+ talon wrong?
                 h1 = 0
@@ -113,7 +118,7 @@ class HeuristicH1:
 class HeuristicH2:
     def __init__(self, nesting_level):
         self.cache = [] #empty cache
-        self.nestingCache = []
+        self.n_cache = []
         self.nestingLevel = nesting_level
 
     def HeuristicStringH2(self, s):
@@ -128,8 +133,12 @@ class HeuristicH2:
             return self.H2(s.tableau,s.foundation,s.reachable_talon,s.unreachable_talon)
 
 
-    def H2(tableau,foundation,reachable_talon,unreachable_talon):
-
+    def h(self, s):
+        tableau = s.tableau
+        foundation = s.foundation
+        reachable_talon = s.reachable_talon
+        unreachable_talon = s.unreachable_talon
+        
         deck = [] #to recreate the deck from the passed stacks
         tableau_face_down = []
         tableau_face_up = []
@@ -231,7 +240,7 @@ class HeuristicH2:
 class HeuristicH3:
     def __init__(self, nesting_level):
         self.cache = [] #empty cache
-        self.nestingCache = []
+        self.n_cache = []
         self.nestingLevel = nesting_level
 
     def HeuristicStringH3(self, s):
@@ -246,8 +255,12 @@ class HeuristicH3:
             return self.H3(s.tableau,s.foundation,s.reachable_talon,s.unreachable_talon)
 
 
-    def H3(tableau,foundation,reachable_talon,unreachable_talon):
-
+    def h(self, s):
+        tableau = s.tableau
+        foundation = s.foundation
+        reachable_talon = s.reachable_talon
+        unreachable_talon = s.unreachable_talon
+        
         deck = [] #to recreate the deck from the passed stacks
         tableau_face_down = []
         tableau_face_up = []

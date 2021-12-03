@@ -340,67 +340,73 @@ def loop_check(s):
     return False
     
 #-----------------------------------------------------------------------------
-def cache_check(s,cache):
-    for entry in cache:
-        if s == entry:
+def cache_check(s,h, n):
+    
+    for idx, entry in enumerate(h.cache):
+        if s == entry and n == h.n_cache[idx]:
             return True
         
     return False
-
-            
 #-----------------------------------------------------------------------------
-def mns_rollout_enhanced(s, hs, ns, a, top_layer, path):
-    if hs[0].h(s) == 'WIN': return 'WIN'
+def mns_rollout_enhanced(s, hs, ns, top_layer, path):
+    #s : Current state
+    #hs : A list containing the heuristic functions
+    #ns : A list containing the current nesting level for each heuristic 
+    #top_layer : A boolean to check if this is the first call of the recurssive function
+    #path : A list of all the states visited by the top layer
+    
+    
+    #Infinity = WIN, negative infinity = LOSS
+    if hs[0].h(s) == float('inf'): return float('inf') #If win, instantly return
 
-    if loop_check(s): return 'LOSS'    
+    #if loop_check(s): return -float('inf') #If stuck, return a loss  
 
     
-    #i.e. no more levels of nesting and not dead end
+    #i.e. no more levels of nesting and is a dead end
     if not get_actions(s) and ns[0] == -1: 
         return hs[0].h(s)
     
-    if cache_check(s,hs[0].cache):
-        if len(hs) == 1:
+    if cache_check(s,hs[0],ns[0]): #Check if already cached
+        if len(hs) == 1: #On last heuristic
             return hs[0](s)
         else:
             return mns_rollout_enhanced(s,hs[1:],ns[1:], False, path)
         
-    while hs[0].h(s) != 'LOSS':
+    while hs[0].h(s) != -float('inf'):
         actions = get_actions(s)
-        best_val = -float('inf')
+        '''
+        actions = prune_actions(s, actions)
+        if not actions: return -float('inf')
+        '''
+        best_val = -float('inf') #Initialize as a loss
         for act in actions:
             new_n = ns.copy()
             new_n[0] -= 1
-            val = mns_rollout_enhanced(result(s,act), hs, new_n, act, False, path)
+            val = mns_rollout_enhanced(result(s,act), hs, new_n, False, path)
             
-            if isinstance(val, str):
-            
-                if val == 'WIN':
-                    best_val = val
-                    best_a = act
-                elif val == 'LOSS':
-                    if -10000 > best_val:
-                        best_val = -10000
-                        best_a = act 
-            else:
-                if val > best_val:
-                    best_val = val
-                    best_a = act
+            if val > best_val:
+                best_val = val
+                best_a = act
                     
-        if best_val == 'WIN':
-            return 'WIN'
-        if best_val == 'LOSS' or (len(hs) != 0 and best_val < hs[0].h(s)): #Loss or local maxima found at nesting level > 0
-            if len(hs)==1: return hs[0].h(s) #Zero nesting level
-            else: return mns_rollout_enhanced(result(s,best_a,hs[1:],ns[1:]), False, path)
+        if best_val == float('inf'): #WIN
+            return float('inf')
+        
+        #If LOSS or local maxima found when not on last heuristic
+        if best_val == -float('inf') or (len(hs) != 0 and best_val < hs[0].h(s)):
+            if len(hs)==1: return hs[0].h(s) #On last heuristic
+            else: return mns_rollout_enhanced(result(s,best_a),hs[1:],ns[1:], False, path)
         
             
         s = result(s,best_a)
         if ns[0] != 0 and len(hs[0].cache) < 5000: #Only cache at non-zero nesting levels
             hs[0].cache.append(s) #Appends to appropriate heuristic
-            hs[0].n.append(ns[0]) #Save nesting level of heuristic
+            hs[0].n_cache.append(ns[0]) #Save nesting level of heuristic
                     
         if top_layer:
             path.append(s)
+            
+    if top_layer:
+        return path
 
             
 #-----------------------------------------------------------------------------
