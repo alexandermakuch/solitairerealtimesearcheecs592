@@ -19,7 +19,7 @@ class HeuristicH1:
             return float('inf')
 
         elif detectUnwinnable(s):
-            return "LOSS"
+            return -float('inf')
 
         else:
             return self.H1(s.tableau,s.foundation,s.reachable_talon,s.unreachable_talon)
@@ -127,7 +127,7 @@ class HeuristicH2:
             return float('inf')
 
         elif detectUnwinnable(s):
-            return "LOSS"
+            return -float('inf')
 
         else:
             return self.H2(s.tableau,s.foundation,s.reachable_talon,s.unreachable_talon)
@@ -249,7 +249,7 @@ class HeuristicH3:
             return float('inf')
 
         elif detectUnwinnable(s):
-            return "LOSS"
+            return -float('inf')
 
         else:
             return self.H3(s.tableau,s.foundation,s.reachable_talon,s.unreachable_talon)
