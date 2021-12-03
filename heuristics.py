@@ -16,7 +16,7 @@ class HeuristicH1:
     def HeuristicStringH1(self, s):
 
         if win(s):
-            return "WIN"
+            return float('inf')
 
         elif detectUnwinnable(s):
             return "LOSS"
@@ -124,7 +124,7 @@ class HeuristicH2:
     def HeuristicStringH2(self, s):
 
         if win(s):
-            return "WIN"
+            return float('inf')
 
         elif detectUnwinnable(s):
             return "LOSS"
@@ -246,7 +246,7 @@ class HeuristicH3:
     def HeuristicStringH3(self, s):
 
         if win(s):
-            return "WIN"
+            return float('inf')
 
         elif detectUnwinnable(s):
             return "LOSS"

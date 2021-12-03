@@ -37,7 +37,7 @@ if not unique:
 #--------------------------------------------------------------------------------
 
 H1 = HeuristicH1(1)
-H2 = HeuristicH2(2)
+H2 = HeuristicH2(1)
 hs = [H1,H2]
 ns = [H1.nestingLevel, H2.nestingLevel]
 
