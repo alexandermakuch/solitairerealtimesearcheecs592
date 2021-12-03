@@ -4,9 +4,6 @@ import random
 from collections import deque
 from deckGenerator import State
 from search import detectUnwinnable, win
-
-
-
 class HeuristicH1:
     def __init__(self, nesting_level):
         self.cache = [] #empty cache
@@ -84,6 +81,7 @@ class HeuristicH1:
                     tableau_build_cards = [["S",card[1]+1],["C",card[1]+1]]
                     
                 for tableau_stack in tableau:
+<<<<<<< Updated upstream
                     if (card[0] == tableau_stack[0][-1][0]) and (card[1] == tableau_stack[0][-1][1]): #for this card to be blocking, it has to be the last face up card in a tableau stack 
                     #for card2 in tableau_stack[0]:
                         #if (card[0] == card2[0]) and (card[1] == card2[1]):
@@ -99,6 +97,26 @@ class HeuristicH1:
                     elif card2[1] < card[1]: #number 5 in table 1
                         h1 = -5
                         break
+=======
+                    if tableau_stack[0]:
+                        if (card[0] == tableau_stack[0][-1][0]) and (card[1] == tableau_stack[0][-1][1]): #for this card to be blocking, it has to be the last face up card in a tableau stack 
+                        #for card2 in tableau_stack[0]:
+                            #if (card[0] == card2[0]) and (card[1] == card2[1]):
+                            #    blocking = tableau_stack[1] #if the card is face up in the tableau, find the list of cards it is blocking
+                            #    break
+                            blocking = tableau_stack[1]
+                            break
+
+
+                    
+                        for card2 in blocking: 
+                            if card2 in tableau_build_cards: #number 6 in table1
+                                h1 = -10
+                                break
+                            elif card2[1] < card[1]: #number 5 in table 1
+                                h1 = -5
+                                break
+>>>>>>> Stashed changes
 
             else: #I dont think this should be needed as every card should fall into a category. Is the K+ talon wrong?
                 h1 = 0
@@ -186,21 +204,22 @@ class HeuristicH2:
                     tableau_build_cards = [["S",card[1]+1],["C",card[1]+1]]
                     
                 for tableau_stack in tableau:
-                    if (card[0] == tableau_stack[0][-1][0]) and (card[1] == tableau_stack[0][-1][1]): #for this card to be blocking, it has to be the last face up card in a tableau stack 
-                        blocking = tableau_stack[1]
-                        break
-                    #for card2 in tableau_stack[0]:
-                    #    if (card[0] == card2[0]) and (card[1] == card2[1]):
-                    #        blocking = tableau_stack[1]
-                    #        break
-                
-                for card2 in blocking: 
-                    if card2 in tableau_build_cards: #number 6 in table1
-                        h2 = -5
-                        break
-                    elif card2[1] < card[1]: #number 5 in table 1
-                        h2 = -1
-                        break
+                    if tableau_stack[0]:
+                        if (card[0] == tableau_stack[0][-1][0]) and (card[1] == tableau_stack[0][-1][1]): #for this card to be blocking, it has to be the last face up card in a tableau stack 
+                            blocking = tableau_stack[1]
+                            break
+                        #for card2 in tableau_stack[0]:
+                        #    if (card[0] == card2[0]) and (card[1] == card2[1]):
+                        #        blocking = tableau_stack[1]
+                        #        break
+                    
+                    for card2 in blocking: 
+                        if card2 in tableau_build_cards: #number 6 in table1
+                            h2 = -5
+                            break
+                        elif card2[1] < card[1]: #number 5 in table 1
+                            h2 = -1
+                            break
 
             else: #I dont think this should be needed as every card should fall into a category. Is the K+ talon wrong?
                 h2 = 0
@@ -352,9 +371,10 @@ class HeuristicH3:
                     tableau_build_cards = [["S",card[1]+1],["C",card[1]+1]]
                     
                 for tableau_stack in tableau:
-                    if (card[0] == tableau_stack[0][-1][0]) and (card[1] == tableau_stack[0][-1][1]): #for this card to be blocking, it has to be the last face up card in a tableau stack 
-                        blocking = tableau_stack[1]
-                        break
+                    if tableau_stack[0]:
+                        if (card[0] == tableau_stack[0][-1][0]) and (card[1] == tableau_stack[0][-1][1]): #for this card to be blocking, it has to be the last face up card in a tableau stack 
+                            blocking = tableau_stack[1]
+                            break
 
                 
                 for card2 in blocking: 

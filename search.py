@@ -1,6 +1,7 @@
 import numpy as np
 from deckGenerator import Kplus, State, winGen
 from collections import deque
+
 #from heuristics import HeuristicH1, HeuristicH2
 # K+ initialization
 
@@ -35,7 +36,7 @@ def get_actions(s):
         #Talon to foundation
         for found_idx, stack in enumerate(s.foundation):
             if stack: #Make sure there's cards in the stack
-                if stack[0][0] == card[0] and stack[0][1] - card[1] == 1: #If suits match and proper next card
+                if stack[0][0] == card[0] and stack[0][1] - card[1] == -1: #If suits match and proper next card
                     new_entry = {'from':[0,tal_idx], 'to':[2,found_idx]}
                     actions.append(new_entry)
             else: #No cards in foundation stack
@@ -114,15 +115,15 @@ def get_actions(s):
                     if stack[0][1] == 13:
                         new_entry = {'from':[2,stack_idx], 'to':[1,tab_idx,0]}
                         #actions.append(new_entry)
-    
     return actions
+    #return prune_actions(s, actions)
 
-def result(s: State,a: dict):
+def result(s1: State,a: dict):
     '''
     s - state
     a - action. this should be  [{'from':[bin idx, location in talon], 'to':[bin idx, stack, location in stack] } ]
     '''
-
+    s = s1
     if a['from'][0] == 0: #0 = from reachable_talon
         card = s.reachable_talon[a['from'][1]]
         s.stock, s.lens, s.reachable_talon, s.unreachable_talon, s.classes = Kplus(card, s.stock, s.lens, s.classes)
@@ -270,7 +271,6 @@ def win(s):
         return False
 
 
-
 def greedy(s,h): #Takes in starting state and a heuristic function
     actions = get_actions(s) #Grab available actions for initial state
     
@@ -286,7 +286,7 @@ def greedy(s,h): #Takes in starting state and a heuristic function
         actions = get_actions(s)
     
     return h(s)
-
+actions11 = []
 def mns_rollout(s, hs, ns, a):
     
     while get_actions(s): #While we have an available action
@@ -300,8 +300,14 @@ def mns_rollout(s, hs, ns, a):
             for act in actions:
                 new_n = ns.copy()
                 new_n[0] -= 1
-                val = mns_rollout(result(s,act), hs, new_n, act)
-                
+                xx = result(s,act)
+                if xx in actions11:
+                    print("loop!")
+                else:
+                    print(actions11)
+                val = mns_rollout(xx, hs, new_n, act)
+                actions11.append(xx)
+
                 if val > best_val:
                     best_val = val
                     best_a = act
@@ -349,8 +355,76 @@ def cache_check(s,cache):
 
             
 #-----------------------------------------------------------------------------
+<<<<<<< Updated upstream
 def mns_rollout_enhanced(s, hs, ns, a, top_layer, path):
     if hs[0].h(s) == 'WIN': return 'WIN'
+=======
+i = 0
+actions12 = []
+
+def loopChecker(a, b):
+    """ Use only when elements are neither hashable nor sortable! """
+    unmatched = list(b)
+    for element in a:
+        try:
+            unmatched.remove(element)
+        except ValueError:
+            return False
+    return not unmatched
+
+gd5 = 0
+from actions import get_actions_supreme
+def faux_mns(s, H1, history):#,hs,ns,top_layer,path):
+    global gd5
+    gd5 += 1
+    #while s is not a dead-end or win
+    actions, history = get_actions_supreme(s, history)
+    # actions12.append(actions)
+    # if len(actions12) > 10:
+    #     print(actions12)
+    #     for b in actions12[-5:]:
+    #             if loopChecker(actions,b):
+    #                 print('Loop')
+    #                 return False
+
+
+    if win(s):
+        return 'Win'
+    elif actions == None:
+        return 'Dead End'
+    else:
+        while gd5 < 100:
+            heuristic_values = np.zeros(len(actions))
+            for x in range(len(actions)):
+                s1 = s.copy()
+                #print(actions[x])
+                heuristic_values[x] = H1.h(result(s1, actions[x]))
+                if s1 == s:
+                    print("bad copy")
+            #print(heuristic_values)
+            best_action = np.argmax(heuristic_values)
+            print('Best action is {} with heuristic value of {}'.format(best_action, heuristic_values[best_action]))
+
+            faux_mns(result(s,actions[best_action]),H1, history)
+
+
+
+def mns_rollout_enhanced(s, hs, ns, top_layer, path):
+    global i
+    print(i)
+    i+=1
+    print("working!")
+
+    #s : Current state
+    #hs : A list containing the heuristic functions
+    #ns : A list containing the current nesting level for each heuristic 
+    #top_layer : A boolean to check if this is the first call of the recurssive function
+    #path : A list of all the states visited by the top layer
+    
+    
+    #Infinity = WIN, negative infinity = LOSS
+    if hs[0].h(s) == float('inf'): return float('inf') #If win, instantly return
+>>>>>>> Stashed changes
 
     if loop_check(s): return 'LOSS'    
 
@@ -367,6 +441,7 @@ def mns_rollout_enhanced(s, hs, ns, a, top_layer, path):
         
     while hs[0].h(s) != 'LOSS':
         actions = get_actions(s)
+<<<<<<< Updated upstream
         best_val = -float('inf')
         for act in actions:
             new_n = ns.copy()
@@ -392,6 +467,38 @@ def mns_rollout_enhanced(s, hs, ns, a, top_layer, path):
         if best_val == 'LOSS' or (len(hs) != 0 and best_val < hs[0].h(s)): #Loss or local maxima found at nesting level > 0
             if len(hs)==1: return hs[0].h(s) #Zero nesting level
             else: return mns_rollout_enhanced(result(s,best_a,hs[1:],ns[1:]), False, path)
+=======
+        '''
+        actions = prune_actions(s, actions)
+        if not actions: return -float('inf')
+        '''
+
+        if not actions:
+            return -float('inf')
+        # else:
+        #     best_a = 0
+
+
+
+        best_val = -float('inf') #Initialize as a loss
+        for act in actions:
+            new_n = ns.copy()
+            new_n[0] -= 1
+            val = mns_rollout_enhanced(s, hs, new_n, False, path)
+            
+            if val > best_val:
+                best_val = val
+                best_a = act
+                print("best action", best_a)
+                    
+        if best_val == float('inf'): #WIN
+            return float('inf')
+        
+        #If LOSS or local maxima found when not on last heuristic
+        if best_val == -float('inf') or (len(hs) != 0 and best_val < hs[0].h(s)):
+            if len(hs)==1: return hs[0].h(s) #On last heuristic
+            else: return mns_rollout_enhanced(s,hs[1:],ns[1:], False, path)
+>>>>>>> Stashed changes
         
             
         s = result(s,best_a)
@@ -533,7 +640,6 @@ def prune_actions(s: State, possible_actions):
         elif action['from'][0] == 2: #moving from foundation
             foundation_stack_idx = action['from'][1]
             card = s.foundation[foundation_stack_idx][-1]
-
 
         if (action['from'][0] == 1) and (action['to'][0] == 2) and (reveal_face_down(s,action)): #action that moves card from tableau to foundation and reveals a face down card
             a01_actions.append(action)

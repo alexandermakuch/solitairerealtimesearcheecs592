@@ -15,13 +15,36 @@ Elements = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
 
 class State:
     def __init__(self, tableau, foundation, reachable_talon, unreachable_talon, stock, lens, classes):
-        self.tableau = tableau
+        self.tableau = tableau.copy()
         self.foundation = foundation
         self.reachable_talon = reachable_talon
         self.unreachable_talon = unreachable_talon
         self.stock = stock
         self.lens = lens
         self.classes = classes
+
+    def copy(self):
+        tableau1 = [self.tableau[0][0].copy(), self.tableau[0][1].copy()]
+        tableau2 = [self.tableau[1][0].copy(), self.tableau[1][1].copy()]
+        tableau3 = [self.tableau[2][0].copy(), self.tableau[2][1].copy()]
+        tableau4 = [self.tableau[3][0].copy(), self.tableau[3][1].copy()]
+        tableau5 = [self.tableau[4][0].copy(), self.tableau[4][1].copy()]
+        tableau6 = [self.tableau[5][0].copy(), self.tableau[5][1].copy()]
+        tableau7 = [self.tableau[6][0].copy(), self.tableau[6][1].copy()]
+        Tableau = [tableau1,tableau2,tableau3,tableau4,tableau5,tableau6,tableau7]
+
+
+        foundation1 = self.foundation[0].copy() #for spades
+        foundation2 = self.foundation[1].copy() #for clubs
+        foundation3 = self.foundation[2].copy() #for hearts
+        foundation4 = self.foundation[3].copy() #for diamonds
+        Foundation = [foundation1,foundation2,foundation3,foundation4]
+
+
+
+
+
+        return State(Tableau, Foundation, self.reachable_talon.copy(), self.unreachable_talon.copy(), self.stock.copy(), self.lens.copy(), self.classes.copy())
 
     def __eq__(self, other):
         return self.tableau == other.tableau and self.foundation == other.foundation and self.stock == other.stock

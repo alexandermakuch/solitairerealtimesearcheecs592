@@ -9,7 +9,7 @@ from heuristics import HeuristicH1, HeuristicH2
 from deckGenerator import State, Kplus, initKplus
 from search import detectUnwinnable, get_actions, result
 import numpy as np
-
+from search import win
 #Generate a random deck of cards
 deck = deckGenerator.deckGen()
 #print(deck)
@@ -309,6 +309,11 @@ class MyGame(arcade.Window):
                 self.piles[x+2].append(card)
                 self.pull_to_top(card)
                 self.piles[x+2][-1].face_up()
+
+    
+
+
+
     def on_key_press(self, symbol: int, modifiers: int):
             
         """ User presses key """
@@ -323,22 +328,45 @@ class MyGame(arcade.Window):
     def on_update(self, delta_time: float):
         global s0
 
-        x = get_actions(s0)
-
-        if not x:
-            print("no actions")
-            time.sleep(5)
-
-        
-
-
-        s0 = result(s0, x[random.randint(0,len(x)-1)])
-
         global new_foundation, new_reachable_talon, new_tableau, new_unreachable_talon
         new_reachable_talon, new_unreachable_talon, new_foundation, new_tableau= load_stacks(s0.reachable_talon, s0.unreachable_talon, s0.foundation, s0.tableau)
         self.setup2()
         self.card_list.update()
-        time.sleep(1/3)
+        
+        def faux_mns(s, H1):#,hs,ns,top_layer,path):
+            #while s is not a dead-end or win
+            actions = get_actions(s)
+            if win(s):
+                return 'Win'
+            elif not actions:
+                return 'Dead End'
+            else:
+                heuristic_values = np.zeros(len(actions))
+                for x in range(len(actions)):
+                    s1 = s.copy()
+                    heuristic_values[x] = H1.h(result(s1, actions[x]))
+                    if s1 == s:
+                        print("bad copy")
+                
+                best_action = np.argmin(heuristic_values)
+                print('Best action is {} with heuristic value of {}'.format(best_action, heuristic_values[best_action]))
+
+                s1=s.copy()
+                s1 = result(s1, actions[best_action])
+
+                return s1
+        
+        
+        H1 = HeuristicH1(1)
+        while 1>0:
+            time.sleep(1)
+            s0=faux_mns(s0, H1)
+            new_reachable_talon, new_unreachable_talon, new_foundation, new_tableau= load_stacks(s0.reachable_talon, s0.unreachable_talon, s0.foundation, s0.tableau)
+            self.setup2()
+            self.card_list.update()
+        
+
+        
 
     def on_draw(self):
         """ Render the screen. """

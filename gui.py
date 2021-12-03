@@ -74,7 +74,7 @@ def initGame(reachable_talon, unreachable_talon, foundation, tableau):
             for x in tableau[y][z]:
                 print(x)
                 new_tableau[y][z].appendleft([lookup_dict.get(x[0]),lookup_dict.get(x[1])])
-    #main()
+    main()
 
 def update(reachable_talon, unreachable_talon, foundation, tableau):
     new_reachable_talon = deque([])
