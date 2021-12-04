@@ -394,13 +394,15 @@ def mns_rollout_enhanced(s, hs, ns, top_layer, path):
         #If LOSS or local maxima found when not on last heuristic
         if best_val == -float('inf') or (len(hs) != 0 and best_val < hs[0].h(s)):
             if len(hs)==1: return hs[0].h(s) #On last heuristic
-            else: return mns_rollout_enhanced(result(s,best_a),hs[1:],ns[1:], False, path)
+            else: return mns_rollout_enhanced(s,hs[1:],ns[1:], False, path)
         
-            
-        s = result(s,best_a)
         if ns[0] != 0 and len(hs[0].cache) < 5000: #Only cache at non-zero nesting levels
             hs[0].cache.append(s) #Appends to appropriate heuristic
             hs[0].n_cache.append(ns[0]) #Save nesting level of heuristic
+        
+        
+        s = result(s,best_a)
+        
                     
         if top_layer:
             path.append(s)
