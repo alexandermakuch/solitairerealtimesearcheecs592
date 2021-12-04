@@ -355,10 +355,6 @@ def cache_check(s,cache):
 
             
 #-----------------------------------------------------------------------------
-<<<<<<< Updated upstream
-def mns_rollout_enhanced(s, hs, ns, a, top_layer, path):
-    if hs[0].h(s) == 'WIN': return 'WIN'
-=======
 i = 0
 actions12 = []
 
@@ -424,7 +420,6 @@ def mns_rollout_enhanced(s, hs, ns, top_layer, path):
     
     #Infinity = WIN, negative infinity = LOSS
     if hs[0].h(s) == float('inf'): return float('inf') #If win, instantly return
->>>>>>> Stashed changes
 
     if loop_check(s): return 'LOSS'    
 
@@ -441,33 +436,6 @@ def mns_rollout_enhanced(s, hs, ns, top_layer, path):
         
     while hs[0].h(s) != 'LOSS':
         actions = get_actions(s)
-<<<<<<< Updated upstream
-        best_val = -float('inf')
-        for act in actions:
-            new_n = ns.copy()
-            new_n[0] -= 1
-            val = mns_rollout_enhanced(result(s,act), hs, new_n, act, False, path)
-            
-            if isinstance(val, str):
-            
-                if val == 'WIN':
-                    best_val = val
-                    best_a = act
-                elif val == 'LOSS':
-                    if -10000 > best_val:
-                        best_val = -10000
-                        best_a = act 
-            else:
-                if val > best_val:
-                    best_val = val
-                    best_a = act
-                    
-        if best_val == 'WIN':
-            return 'WIN'
-        if best_val == 'LOSS' or (len(hs) != 0 and best_val < hs[0].h(s)): #Loss or local maxima found at nesting level > 0
-            if len(hs)==1: return hs[0].h(s) #Zero nesting level
-            else: return mns_rollout_enhanced(result(s,best_a,hs[1:],ns[1:]), False, path)
-=======
         '''
         actions = prune_actions(s, actions)
         if not actions: return -float('inf')
@@ -498,7 +466,6 @@ def mns_rollout_enhanced(s, hs, ns, top_layer, path):
         if best_val == -float('inf') or (len(hs) != 0 and best_val < hs[0].h(s)):
             if len(hs)==1: return hs[0].h(s) #On last heuristic
             else: return mns_rollout_enhanced(s,hs[1:],ns[1:], False, path)
->>>>>>> Stashed changes
         
             
         s = result(s,best_a)

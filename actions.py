@@ -1,7 +1,6 @@
 import numpy as np
 from collections import deque
 from deckGenerator import State
-from search import prune_actions
 
 
 def opp_color_check(c1: str, c2: str):
@@ -114,8 +113,8 @@ def get_actions_revB(s:State):
                     if stack[0][1] == 13:
                         new_entry = {'from':[2,stack_idx], 'to':[1,tab_idx,0]}
                         #actions.append(new_entry)
-    #return actions
-    return prune_actions(s, actions)
+    return actions
+    #return prune_actions(s, actions)
 
 def loopChecker(a, b):
     """ Use only when elements are neither hashable nor sortable! """
