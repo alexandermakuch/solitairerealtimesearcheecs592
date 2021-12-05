@@ -124,6 +124,40 @@ def get_actions(s):
     return actions
     #return prune_actions(s, actions)
 
+
+def loopChecker(a, b):
+    """ Use only when elements are neither hashable nor sortable! """
+    unmatched = list(b)
+    for element in a:
+        try:
+            unmatched.remove(element)
+        except ValueError:
+            return False
+    return not unmatched
+
+
+
+def get_actions_supreme(s: State, history: deque, history_limit=2):
+    actions = get_actions(s)
+
+    loop = False
+    if len(history) > history_limit:
+        for b in history:
+            if loopChecker(actions, b):
+                loop= True
+    else:
+        history.append(actions)
+        return actions, history
+
+    if loop:
+        print("Loop Detected")
+        return [], history
+    else:
+        history.append(actions)
+        return actions, history
+
+
+
 def result(s1: State,a: dict):
     '''
     s - state
@@ -277,80 +311,6 @@ def win(s):
         return False
 
 
-def greedy(s,h): #Takes in starting state and a heuristic function
-    actions = get_actions(s) #Grab available actions for initial state
-    
-    best_res = -float('inf') #Set to negative infinity for first loop
-    while actions:
-        for a in actions:
-            res = h(result(s,a))
-            if res > best_res:
-                best_res = res
-                best_a = a
-        ap = best_a
-        s = result(s,ap) #Take best action to next state
-        actions = get_actions(s)
-    
-    return h(s)
-actions11 = []
-def mns_rollout(s, hs, ns, a):
-    
-    while get_actions(s): #While we have an available action
-        
-        if ns[0] == -1: #i.e. no more levels of nesting
-            return hs[0](s,a)
-        
-        else:
-            actions = get_actions(s)
-            best_val = -float('inf')
-            for act in actions:
-                new_n = ns.copy()
-                new_n[0] -= 1
-                xx = result(s,act)
-                if xx in actions11:
-                    print("loop!")
-                else:
-                    print(actions11)
-                val = mns_rollout(xx, hs, new_n, act)
-                actions11.append(xx)
-
-                if val > best_val:
-                    best_val = val
-                    best_a = act
-            
-            #Checks if value of taking best_a is less than the value of 
-            #our current state.
-            if hs[0](s) > best_val and len(hs) != 1:
-                actions = get_actions(s)
-                best_val = -float('inf')
-                
-                for act in actions:
-                    #Move on to the next heuristic
-                    val = mns_rollout(result(s,act), hs[1:], ns[1:], act)
-                
-                if val > best_val:
-                    best_val = val
-                    best_a = act
-            
-            s = result(s,best_a)
-            #implement way to store the path we take
-            
-    return hs[0](s)
-
-def loop_check(s):
-    '''
-    Needed: what data structure will the cached states be in?
-    Also, how is "nesting level" of current state determined?
-    '''
-
-    for cached in HeuristicH1.cache:
-        if State.__eq__(s,cached): 
-            return True
-    for cached in HeuristicH2.cache:
-        if State.__eq__(s,cached): 
-            return True
-    return False
-    
 #-----------------------------------------------------------------------------
 def cache_check(s,h, n):
     
@@ -362,64 +322,14 @@ def cache_check(s,h, n):
 
             
 #-----------------------------------------------------------------------------
-i = 0
-actions12 = []
-
-def loopChecker(a, b):
-    """ Use only when elements are neither hashable nor sortable! """
-    unmatched = list(b)
-    for element in a:
-        try:
-            unmatched.remove(element)
-        except ValueError:
-            return False
-    return not unmatched
-
-gd5 = 0
-from actions import get_actions_supreme
-def faux_mns(s, H1, history):#,hs,ns,top_layer,path):
-    global gd5
-    gd5 += 1
-    #while s is not a dead-end or win
-    actions, history = get_actions_supreme(s, history)
-    # actions12.append(actions)
-    # if len(actions12) > 10:
-    #     print(actions12)
-    #     for b in actions12[-5:]:
-    #             if loopChecker(actions,b):
-    #                 print('Loop')
-    #                 return False
-
-
-    if win(s):
-        return 'Win'
-    elif actions == None:
-        return 'Dead End'
-    else:
-        while gd5 < 100:
-            heuristic_values = np.zeros(len(actions))
-            for x in range(len(actions)):
-                s1 = s.copy()
-                #print(actions[x])
-                heuristic_values[x] = H1.h(result(s1, actions[x]))
-                if s1 == s:
-                    print("bad copy")
-            #print(heuristic_values)
-            best_action = np.argmax(heuristic_values)
-            print('Best action is {} with heuristic value of {}'.format(best_action, heuristic_values[best_action]))
-
-            faux_mns(result(s,actions[best_action]),H1, history)
-
-
-
-def mns_rollout_enhanced(s, hs, ns, layer, path):
+def mns_rollout_enhanced(s, hs, ns, layer, path, history):
     #s : Current state
     #hs : A list containing the heuristic functions
     #ns : A list containing the current nesting level for each heuristic 
     #top_layer : A boolean to check if this is the first call of the recurssive function
     #path : A list of all the states visited by the top layer
     
-    print('Layer = ',layer)
+    #print('Layer = ',layer)
     #Infinity = WIN, negative infinity = LOSS
     if hs[0].h(s) == float('inf'): return float('inf') #If win, instantly return
 
@@ -427,10 +337,8 @@ def mns_rollout_enhanced(s, hs, ns, layer, path):
     
     '''
     #Recurssion limit
-    if layer > 9:
-        print('Time to back off!')
-        print('Heuristic: ', hs[0].h(s))
-        return float('inf') 
+    if layer > 60:
+        return -float('inf')#hs[0].h(s)
     '''
     
     #i.e. no more levels of nesting and is a dead end
@@ -441,35 +349,39 @@ def mns_rollout_enhanced(s, hs, ns, layer, path):
         if len(hs) == 1: #On last heuristic
             return hs[0].h(s)
         else:
-            return mns_rollout_enhanced(s,hs[1:],ns[1:], layer+1, path)
+            return mns_rollout_enhanced(s,hs[1:],ns[1:], layer+1, path, history)
         
     while hs[0].h(s) != -float('inf'):
-
-        actions = get_actions(s)
+        
+        actions,history = get_actions_supreme(s.copy(),history)
+        #actions = get_actions(s)
         actions = prune_actions(s, actions)
 
         if not actions: return -float('inf')
 
         best_val = -float('inf') #Initialize as a loss
+        best_a = 0
         for act in actions:
             new_n = ns.copy()
             new_n[0] -= 1
-            val = mns_rollout_enhanced(result(s.copy(),act), hs, new_n, layer+1, path)
+            val = mns_rollout_enhanced(result(s.copy(),act), hs, new_n, layer+1, path, history)
             
             if val > best_val:
                 best_val = val
                 best_a = act
-                    
+        
+        print('Best action: ',best_a)        
+        
         if best_val == float('inf'): #WIN
             return float('inf')
         
         #If LOSS or local maxima found when not on last heuristic
         if best_val == -float('inf') or (len(hs) != 0 and best_val < hs[0].h(s)):
             if len(hs)==1: return hs[0].h(s) #On last heuristic
-            else: return mns_rollout_enhanced(s,hs[1:],ns[1:], layer+1, path)
+            else: return mns_rollout_enhanced(s,hs[1:],ns[1:], layer+1, path, history)
         
         if ns[0] != 0 and len(hs[0].cache) < 5000: #Only cache at non-zero nesting levels
-            hs[0].cache.append(s) #Appends to appropriate heuristic
+            hs[0].cache.append(s.copy()) #Appends to appropriate heuristic
             hs[0].n_cache.append(ns[0]) #Save nesting level of heuristic
         
         
@@ -584,6 +496,10 @@ def prune_actions(s, possible_actions):
     TODO: additional ordering from strategy guide?
     '''
 
+    
+    if possible_actions == None:
+        return []
+    
     if len(possible_actions) == 1: #there is only one possible action
         return possible_actions[0]
     

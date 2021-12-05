@@ -2,7 +2,7 @@ from collections import deque
 import deckGenerator
 from heuristics import HeuristicH1, HeuristicH2
 from deckGenerator import State, Kplus, initKplus
-from search import detectUnwinnable, faux_mns, get_actions, prune_actions, result
+from search import detectUnwinnable, get_actions, prune_actions, result
 from search import mns_rollout_enhanced
 from state_setter import state_setter
 import copy
@@ -65,7 +65,7 @@ def main():
     ns = [H1.nestingLevel, H2.nestingLevel]
     history = deque([])
     #print(faux_mns(s0, H1, history))
-    mns_rollout_enhanced(s0,hs,ns,1,[])
+    mns_rollout_enhanced(s0,hs,ns,1,[],[])
     print("not broken")
     #gui.initGame(s0.reachable_talon,s0.unreachable_talon,s0.foundation,s0.tableau)
     #mns_rollout_enhanced(s0, hs, ns, top_layer=True, path=[])
