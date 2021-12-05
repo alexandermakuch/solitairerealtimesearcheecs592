@@ -4,9 +4,9 @@ from collections import deque
 from search import faux_mns
 import numpy as np
 import pickle
-from heuristics import HeuristicH1
+from heuristics import HeuristicH2
 import gui
-NEW_STATE = True
+NEW_STATE = False
 
 if NEW_STATE:
     file = open('important','wb')
@@ -28,6 +28,6 @@ file.close()
 history = []
 
 
-H1 = HeuristicH1(1)
+H1 = HeuristicH2(1)
 print(faux_mns(s0, H1, history))
 gui.initGame(s0.reachable_talon, s0.unreachable_talon, s0.foundation, s0.tableau)

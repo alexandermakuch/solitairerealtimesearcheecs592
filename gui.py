@@ -42,20 +42,15 @@ def load_stacks(reachable_talon, unreachable_talon, foundation, tableau):
     new_foundation = deque([deque([]),deque([]),deque([]),deque([])])
     new_tableau = deque([[deque([]), deque([])],[deque([]), deque([])],[deque([]), deque([])],[deque([]), deque([])],[deque([]), deque([])],[deque([]), deque([])],[deque([]), deque([])]])
     for x in reachable_talon:
-        print(x)
         new_reachable_talon.append([lookup_dict.get(x[0]),lookup_dict.get(x[1])])
     for x in unreachable_talon:
-        print(x)
         new_unreachable_talon.append([lookup_dict.get(x[0]),lookup_dict.get(x[1])])
     for y in range(4):
-        for x in foundation[y]:
-            print(x)
             new_foundation[y].append([lookup_dict.get(x[0]),lookup_dict.get(x[1])])
             print(new_foundation[y])
     for y in range(7):
         for z in range(2):
             for x in tableau[y][z]:
-                print(x)
                 new_tableau[y][z].appendleft([lookup_dict.get(x[0]),lookup_dict.get(x[1])])
     return new_reachable_talon, new_unreachable_talon, new_foundation, new_tableau
 
@@ -68,11 +63,9 @@ def initGame(reachable_talon, unreachable_talon, foundation, tableau):
     for y in range(4):
         for x in foundation[y]:
             new_foundation[y].append([lookup_dict.get(x[0]),lookup_dict.get(x[1])])
-            print(new_foundation[y])
     for y in range(7):
         for z in range(2):
             for x in tableau[y][z]:
-                print(x)
                 new_tableau[y][z].appendleft([lookup_dict.get(x[0]),lookup_dict.get(x[1])])
     main()
 

@@ -413,7 +413,7 @@ def Kplus(element, x: list,lens: np.array, classes: np.array):
                 resort(tempLens)
 
     else:
-        return None, None, None, None, None
+        return [], [], deque([]), deque([]), []
     #make last card immediately playable    
     modClass[-1] = 1
     reachability[-1] = True
