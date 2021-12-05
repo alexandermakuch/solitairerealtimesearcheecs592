@@ -29,18 +29,22 @@ class HeuristicH1:
         reachable_talon = s.reachable_talon
         unreachable_talon = s.unreachable_talon
         
-        #What's all this stuff below?
         deck = [] #to recreate the deck from the passed stacks
         tableau_face_down = []
         tableau_face_up = []
         foundation_all = []
+        blocking_cards = []
         for tableau_stack in tableau:
             for card in tableau_stack[0]:
                 deck.append(card)
                 tableau_face_up.append(card)
+                if (card[0] == tableau_stack[0][-1][0]) and (card[1] == tableau_stack[0][-1][1]): #it is the last face up card, it is a blocking card
+                    blocking_cards.append(card)
             for card in tableau_stack[1]:
                 deck.append(card)
                 tableau_face_down.append(card)
+                if not((card[0] == tableau_stack[1][-1][0]) and (card[1] == tableau_stack[1][-1][1])): #not the last face down card, so it is a blocking card
+                    blocking_cards.append(card)
         
         for foundation_stack in foundation:
             for card in foundation_stack:
@@ -78,7 +82,8 @@ class HeuristicH1:
             elif card in reachable_talon: #number 3 in table 1
                 h1 = 0
 
-            elif card in tableau_face_up: 
+            
+            elif card in blocking_cards: #blocking card
                 tableau_build_cards = []
                 if ((card[0] == "S") or (card[0] == "C")) and (card[1] != 13):
                     tableau_build_cards = [["H",card[1]+1],["D",card[1]+1]]
@@ -86,26 +91,30 @@ class HeuristicH1:
                     tableau_build_cards = [["S",card[1]+1],["C",card[1]+1]]
 
                 blocking = []
-                    
+
                 for tableau_stack in tableau:
-                    if tableau_stack[0]:
-                        if (card[0] == tableau_stack[0][-1][0]) and (card[1] == tableau_stack[0][-1][1]): #for this card to be blocking, it has to be the last face up card in a tableau stack 
-                        #for card2 in tableau_stack[0]:
-                            #if (card[0] == card2[0]) and (card[1] == card2[1]):
-                            #    blocking = tableau_stack[1] #if the card is face up in the tableau, find the list of cards it is blocking
-                            #    break
-                            blocking = tableau_stack[1]
+                    if (card in tableau_stack[0]): #it must be the last face up card since it is a blocking card
+                        blocking = tableau_stack[1] #blocking all face down cards
+                        break
+
+                    elif(card in tableau_stack[1]):
+                        card_idx = tableau_stack[1].index(card)
+                        blocking = tableau_stack[1][card_idx+1:]
+                        break
+
+
+                if blocking:
+                    for card2 in blocking: 
+                        if card2 in tableau_build_cards: #number 6 in table1
+                            h1 = -10
                             break
-
-
-                    
-                        for card2 in blocking: 
-                            if card2 in tableau_build_cards: #number 6 in table1
-                                h1 = -10
-                                break
-                            elif card2[1] < card[1]: #number 5 in table 1
-                                h1 = -5
-                                break
+                        elif card2[1] < card[1]: #number 5 in table 1
+                            h1 = -5
+                            break
+                        else:
+                            h1 = 0 #not blocking any card of interest 
+                else:
+                    h1 = 0 #not blocking any card of interest
 
             else: #I dont think this should be needed as every card should fall into a category. Is the K+ talon wrong?
                 h1 = 0
@@ -145,13 +154,18 @@ class HeuristicH2:
         tableau_face_down = []
         tableau_face_up = []
         foundation_all = []
+        blocking_cards = []
         for tableau_stack in tableau:
             for card in tableau_stack[0]:
                 deck.append(card)
                 tableau_face_up.append(card)
+                if (card[0] == tableau_stack[0][-1][0]) and (card[1] == tableau_stack[0][-1][1]): #it is the last face up card, it is a blocking card
+                    blocking_cards.append(card)
             for card in tableau_stack[1]:
                 deck.append(card)
                 tableau_face_down.append(card)
+                if not((card[0] == tableau_stack[1][-1][0]) and (card[1] == tableau_stack[1][-1][1])): #not the last face down card, so it is a blocking card
+                    blocking_cards.append(card)
         
         for foundation_stack in foundation:
             for card in foundation_stack:
@@ -189,23 +203,27 @@ class HeuristicH2:
             elif card in reachable_talon: #number 3 in table 1
                 h2 = 1
 
-            elif card in tableau_face_up: 
+            elif card in blocking_cards: #blocking card
                 tableau_build_cards = []
                 if ((card[0] == "S") or (card[0] == "C")) and (card[1] != 13):
                     tableau_build_cards = [["H",card[1]+1],["D",card[1]+1]]
                 elif ((card[0] == "H") or (card[0] == "D")) and (card[1] != 13):
                     tableau_build_cards = [["S",card[1]+1],["C",card[1]+1]]
-                    
+
+                blocking = []
+
                 for tableau_stack in tableau:
-                    if tableau_stack[0]:
-                        if (card[0] == tableau_stack[0][-1][0]) and (card[1] == tableau_stack[0][-1][1]): #for this card to be blocking, it has to be the last face up card in a tableau stack 
-                            blocking = tableau_stack[1]
-                            break
-                        #for card2 in tableau_stack[0]:
-                        #    if (card[0] == card2[0]) and (card[1] == card2[1]):
-                        #        blocking = tableau_stack[1]
-                        #        break
-                    
+                    if (card in tableau_stack[0]): #it must be the last face up card since it is a blocking card
+                        blocking = tableau_stack[1] #blocking all face down cards
+                        break
+
+                    elif(card in tableau_stack[1]):
+                        card_idx = tableau_stack[1].index(card)
+                        blocking = tableau_stack[1][card_idx+1:]
+                        break
+
+
+                if blocking:
                     for card2 in blocking: 
                         if card2 in tableau_build_cards: #number 6 in table1
                             h2 = -5
@@ -213,6 +231,10 @@ class HeuristicH2:
                         elif card2[1] < card[1]: #number 5 in table 1
                             h2 = -1
                             break
+                        else:
+                            h2 = 0 #not blocking any card of interest 
+                else:
+                    h2 = 0 #not blocking any card of interest
 
             else: #I dont think this should be needed as every card should fall into a category. Is the K+ talon wrong?
                 h2 = 0
@@ -268,13 +290,18 @@ class HeuristicH3:
         tableau_face_down = []
         tableau_face_up = []
         foundation_all = []
+        blocking_cards = []
         for tableau_stack in tableau:
             for card in tableau_stack[0]:
                 deck.append(card)
                 tableau_face_up.append(card)
+                if (card[0] == tableau_stack[0][-1][0]) and (card[1] == tableau_stack[0][-1][1]): #it is the last face up card, it is a blocking card
+                    blocking_cards.append(card)
             for card in tableau_stack[1]:
                 deck.append(card)
                 tableau_face_down.append(card)
+                if not((card[0] == tableau_stack[1][-1][0]) and (card[1] == tableau_stack[1][-1][1])): #not the last face down card, so it is a blocking card
+                    blocking_cards.append(card)
         
         for foundation_stack in foundation:
             for card in foundation_stack:
@@ -360,27 +387,40 @@ class HeuristicH3:
                     h3 = 3
 
 
-            elif card in tableau_face_up: 
+            elif card in blocking_cards: #blocking card
                 tableau_build_cards = []
                 if ((card[0] == "S") or (card[0] == "C")) and (card[1] != 13):
                     tableau_build_cards = [["H",card[1]+1],["D",card[1]+1]]
                 elif ((card[0] == "H") or (card[0] == "D")) and (card[1] != 13):
                     tableau_build_cards = [["S",card[1]+1],["C",card[1]+1]]
-                    
-                for tableau_stack in tableau:
-                    if tableau_stack[0]:
-                        if (card[0] == tableau_stack[0][-1][0]) and (card[1] == tableau_stack[0][-1][1]): #for this card to be blocking, it has to be the last face up card in a tableau stack 
-                            blocking = tableau_stack[1]
-                            break
 
-                
-                for card2 in blocking: 
-                    if card2 in tableau_build_cards: #number 6 in table 1
-                        h3 = -5
+                blocking = []
+
+                for tableau_stack in tableau:
+                    if (card in tableau_stack[0]): #it must be the last face up card since it is a blocking card
+                        blocking = tableau_stack[1] #blocking all face down cards
                         break
-                    elif (card2[0] == card[0]) and (card2[1] < card[1]): #modified number 5 in table 1
-                        h3 = -1
+
+                    elif(card in tableau_stack[1]):
+                        card_idx = tableau_stack[1].index(card)
+                        blocking = tableau_stack[1][card_idx+1:]
                         break
+
+
+                if blocking:
+                    for card2 in blocking: 
+                        if card2 in tableau_build_cards: #number 6 in table1
+                            h3 = -5
+                            break
+                        elif (card2[0] == card[0]) and (card2[1] < card[1]): #modified number 5 in table 1
+                            h3 = -1
+                            break
+                        else:
+                            h3 = 0 #not blocking any card of interest 
+                else:
+                    h3 = 0 #not blocking any card of interest
+
+
 
             else: #I dont think this should be needed as every card should fall into a category.
                 h3 = 0
