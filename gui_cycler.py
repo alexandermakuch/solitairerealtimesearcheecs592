@@ -5,13 +5,9 @@ Solitaire clone: From python arcade wiki https://api.arcade.academy/en/latest/tu
 from collections import deque
 import time
 
-from arcade.key import LEFT
 import deckGenerator
-from heuristics import HeuristicH1, HeuristicH2
 from deckGenerator import State, initKplus
-from search import get_actions, result
 import numpy as np
-from search import win
 import arcade
 
 from typing import Optional

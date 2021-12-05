@@ -142,7 +142,7 @@ def get_actions_supreme(s: State, history: deque, history_limit=2):
 
     if loop:
         print("Loop Detected")
-        return None, None
+        return [], history
     else:
         history.append(actions)
         return actions, history
