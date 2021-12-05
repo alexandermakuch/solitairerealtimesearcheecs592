@@ -487,7 +487,7 @@ def reveal_face_down(s: State, a: dict):
     Function should only be called when the 'from' key of the action == 1 (when we are moving from the tableau)
     '''
 
-    sprime = result(s,a)
+    sprime = result(s.copy(),a) #we dont actually want to take the action a, just see sprime that results
 
     for tab_idx in range(len(s.tableau)):
         s_tableau_stack = s.tableau[tab_idx]
@@ -576,7 +576,6 @@ def prune_actions(s: State, possible_actions):
     Inputs: current state s and list of possible actions in state s
     Output: the best actions as a dictionary
     Explanation: the best actions is based on action ordering from the paper. The heuristic is only used for tie-breaking, which is not done in this function.
-    TODO: additional ordering from strategy guide?
     '''
 
     if len(possible_actions) == 1: #there is only one possible action
@@ -608,13 +607,13 @@ def prune_actions(s: State, possible_actions):
             foundation_stack_idx = action['from'][1]
             card = s.foundation[foundation_stack_idx][-1]
 
-        if (action['from'][0] == 1) and (action['to'][0] == 2) and (reveal_face_down(s,action)): #action that moves card from tableau to foundation and reveals a face down card
+        if (action['from'][0] == 1) and (action['to'][0] == 2) and (reveal_face_down(s.copy(),action)): #action that moves card from tableau to foundation and reveals a face down card
             a01_actions.append(action)
         
         elif action['to'][0] == 2: #action that moves card to foundation
             a02_actions.append(action)
         
-        elif (action['from'][0] == 1) and (action['to'][0] == 1) and (reveal_face_down(s,action)): #action that moves card from tableau to tableau and reveals a face down card
+        elif (action['from'][0] == 1) and (action['to'][0] == 1) and (reveal_face_down(s.copy(),action)): #action that moves card from tableau to tableau and reveals a face down card
             if (card[1] == 13): #card being moved is a King
                 if (KingToTableau(s,action)):
                     a03_actions.append(action)
@@ -628,7 +627,7 @@ def prune_actions(s: State, possible_actions):
             else:
                 a04_actions.append(action)
 
-        elif (action['from'][0] == 2) and (action['to'][0] == 1) and (not(foundation_progression(s,action))): #action that moves card from foundation to tableau
+        elif (action['from'][0] == 2) and (action['to'][0] == 1) and (not(foundation_progression(s.copy(),action))): #action that moves card from foundation to tableau
             if (card[1] == 13): #card being moved is a King
                 if (KingToTableau(s,action)):
                     a05_actions.append(action)
@@ -709,4 +708,125 @@ def prune_actions(s: State, possible_actions):
         #         best_val = val
         #         best_act = action
         # return best_act
+        return a07_actions
+
+
+def largest_fd_idx(s: State):
+    '''
+    Input: current state s
+    Output: the tableau stack indexes with the most face down cards
+    '''
+    max_fd_count = 0
+    largest_facedown_idxs = []
+    tab_idx = 0
+    for tableau_stack in s.tableau:
+        if len(tableau_stack[1]) > max_fd_count:
+            max_fd_count = len(tableau_stack[1])
+            largest_facedown_idxs = [tab_idx]
+        elif len(tableau_stack[1]) == max_fd_count:
+            largest_facedown_idxs.append(tab_idx)
+        tab_idx += 1
+
+    return largest_facedown_idxs
+
+
+def strategy_prune_actions(s: State, possible_actions):
+    '''
+    Inputs: current state s and list of possible actions in state s
+    Output: the best actions as a dictionary
+    Explanation: the best actions is based on action ordering from the strategy guide and our own intuition. The heuristic is only used for tie-breaking, which is not done in this function.
+    '''
+    
+    if len(possible_actions) == 1: #there is only one possible action
+        return possible_actions[0]
+    
+    if len(possible_actions) == 0: #there are no possible actions
+        return []
+
+    
+    a01_actions = [] #actions that move an Ace or 2 card from talon or tableau to foundation
+    a02_actions = [] #actions that move a card from tableau to foundation or to tableau and reveal a face down card from biggest pile(s) of face down cards
+    a03_actions = [] #actions that move a card to the foundation
+    a04_actions = [] #actions that move a card from the talon to the tableau
+    a05_actions = [] #actions that move a card from the foundation to the tableau
+    a06_actions = [] #actions that move a card from tableau to tableau and do not reveal a face down card
+    a07_actions = [] #all other actions. Just to check but this should never happen.
+
+    largest_facedown_idxs = largest_fd_idx(s) #the tableau_stack_idx(s) with the most face down cards
+    largest_facedown_count_sofar = -1
+
+    for action in possible_actions:
+
+        card = None
+        if action['from'][0] == 1: #moving from tableau
+            tableau_stack_idx = action['from'][1]
+            card_idx = action['from'][2]
+            card = s.tableau[tableau_stack_idx][0][card_idx]
+        elif action['from'][0] == 0: #moving from talon
+            card_idx = action['from'][1]
+            card = s.reachable_talon[card_idx]
+        elif action['from'][0] == 2: #moving from foundation
+            foundation_stack_idx = action['from'][1]
+            card = s.foundation[foundation_stack_idx][-1]
+
+        
+
+        if ((action['from'][0] == 0) or (action['from'][0] == 1)) and ((card[1] == 1) or (card[1] == 2)): #ace or 2 in talon or tableau that can move to the foundation
+            a01_actions.append(action)
+
+        elif (action['from'][0] == 1) and ((action['to'][0] == 2) or (action['to'][0] == 1)) and (reveal_face_down(s.copy(),action)): #action that moves card from tableau to foundation or to tableau and reveals a face down card
+            num_fd = len(s.tableau[tableau_stack_idx][1])
+            if num_fd > largest_facedown_count_sofar:
+                largest_facedown_count_sofar = num_fd
+                a02_actions = [action] #prioritize actions that reveal a card from a stack with more face down cards
+            elif num_fd == largest_facedown_count_sofar:
+                a02_actions.append(action)
+
+        elif action['to'][0] == 2: #action that moves card to foundation
+            a03_actions.append(action)
+           
+        elif (action['from'][0] == 0) and (action['to'][0] == 1): #action that moves card from talon to tableau
+            if (card[1] == 13): #card being moved is a King
+                if (KingToTableau(s,action)): #if multiple empty stacks, the King should move to the leftmost stack (stack 0)
+                    a04_actions.append(action)
+            else:
+                a04_actions.append(action)
+
+        elif (action['from'][0] == 2) and (action['to'][0] == 1) and (not(foundation_progression(s.copy(),action))): #action that moves card from foundation to tableau
+            if (card[1] == 13): #card being moved is a King
+                if (KingToTableau(s,action)):
+                    a05_actions.append(action)
+            else:
+                a05_actions.append(action)
+
+        elif (action['from'][0] == 1) and (action['to'][0] == 1): #action that moves card from tableau to tableau and does not reveal a face down card
+            if (card[1] == 13): #card being moved is a King
+                if (KingToTableau(s,action)):
+                    a06_actions.append(action)
+            else:
+                a06_actions.append(action)
+
+        else:
+            a07_actions.append(action) #all other actions
+
+    
+    if len(a01_actions) > 0:
+        return a01_actions
+
+    if len(a02_actions) > 0:
+        return a02_actions
+
+    if len(a03_actions) > 0:
+        return a03_actions
+
+    if len(a04_actions) > 0:
+        return a04_actions
+
+    if len(a05_actions) > 0:
+        return a05_actions
+
+    if len(a06_actions) > 0:
+        return a06_actions
+
+    if len(a07_actions) > 0:
         return a07_actions
