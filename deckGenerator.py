@@ -41,9 +41,28 @@ class State:
         Foundation = [foundation1,foundation2,foundation3,foundation4]
 
 
+        if type(self.unreachable_talon) == type(None):
+            self.unreachable_talon = []
+            
+        if type(self.reachable_talon) == type(None):
+            self.reachable_talon = []
+            
+        if type(self.stock) == type(None):
+            self.stock = []
+            
+        if type(self.lens) == type(None):
+            self.lens = np.array([])
+        
+
+        if type(self.classes) == type(None):
+            self.classes = np.array([])
 
 
-
+        #print('Talon 1: ',self.reachable_talon)
+        #print('Talon 2: ',self.unreachable_talon)
+        #print('Stock: ',self.stock)
+        #print('Tableau: ',Tableau)
+        
         return State(Tableau, Foundation, self.reachable_talon.copy(), self.unreachable_talon.copy(), self.stock.copy(), self.lens.copy(), self.classes.copy())
 
     def __eq__(self, other):
@@ -127,103 +146,8 @@ class State:
         
         print("All cards are unique")
         return isUnique
-
-    def HeuristicH1H2(self):
-
-        deck = [] #to recreate the deck from the passed stacks
-        tableau_face_down = []
-        tableau_face_up = []
-        foundation_all = []
-        for tableau_stack in self.tableau:
-            for card in tableau_stack[0]:
-                deck.append(card)
-                tableau_face_up.append(card)
-            for card in tableau_stack[1]:
-                deck.append(card)
-                tableau_face_down.append(card)
-        
-        for foundation_stack in self.foundation:
-            for card in foundation_stack:
-                deck.append(card)
-                foundation_all.append(card)
-        
-        for card in self.reachable_talon:
-            deck.append(card)
-
-        for card in self.unreachable_talon:
-            deck.append(card)
-
-
-        H1 = 0
-        H2 = 0
-        num_elses = 0
-
-        for card in deck:
-            h1 = 0
-            h2 = 0
-            if card in foundation_all: #number 1 in table 1
-                h1 = 5 - (card[1] - 1) #-1 because the rank value starts at 0
-                h2 = 5
-
-            elif card in tableau_face_down: #number 2 in table 1
-                h1 = (card[1] - 1) - 13
-                h2 = (card[1] - 1) - 13
-                if card[0] == "S":
-                    counterpart = ["C", card[1]]
-                elif card[0] == "C":
-                    counterpart = ["S", card[1]]
-                elif card[0] == "H":
-                    counterpart = ["D", card[1]]
-                elif card[0] == "D":
-                    counterpart = ["H", card[1]]
-
-                if counterpart in tableau_face_down: #number 4 in table 1
-                    h1 = -5
-                    h2 = -1
-
-            elif card in self.reachable_talon: #number 3 in table 1
-                h1 = 0
-                h2 = 1
-
-            elif card in tableau_face_up: 
-                tableau_build_cards = []
-                if ((card[0] == "S") or (card[0] == "C")) and (card[1] != 13):
-                    tableau_build_cards = [["H",card[1]+1],["D",card[1]+1]]
-                elif ((card[0] == "H") or (card[0] == "D")) and (card[1] != 13):
-                    tableau_build_cards = [["S",card[1]+1],["C",card[1]+1]]
-                    
-                for tableau_stack in self.tableau:
-                    if (card[0] == tableau_stack[0][-1][0]) and (card[1] == tableau_stack[0][-1][1]): #for this card to be blocking, it has to be the last face up card in a tableau stack 
-                    #for card2 in tableau_stack[0]:
-                        #if (card[0] == card2[0]) and (card[1] == card2[1]):
-                        #    blocking = tableau_stack[1] #if the card is face up in the tableau, find the list of cards it is blocking
-                        #    break
-                        blocking = tableau_stack[1]
-                        break
-                
-                for card2 in blocking: 
-                    if card2 in tableau_build_cards: #number 6 in table1
-                        h1 = -10
-                        h2 = -5
-                        break
-                    elif card2[1] < card[1]: #number 5 in table 1
-                        h1 = -5
-                        h2 = -1
-                        break
-
-            else: #I dont think this should be needed as every card should fall into a category. Is the K+ talon wrong?
-                h1 = 0
-                h2 = 0
-                num_elses += 1
-
-            H1 += h1 #sum the heuristic for this card 
-            H2 += h2 #sum the heuristic for this card
-
-        #print(num_elses)
-        return H1, H2
         
     
-
 
 def isUniqueDeck(deck):
     isUnique = True
@@ -325,10 +249,10 @@ def winGen():
     return Tableau, Foundation, Reachable_Talon, Unreachable_Talon, stock, lens, classes
 
 
-def initKplus(x: list):
+def initKplus(x: list, tile_length):
     reachable = deque([])
     unreachable = deque([])
-    for a, val in enumerate(np.tile(np.array([False, False, True]), 8)):
+    for a, val in enumerate(np.tile(np.array([False, False, True]), tile_length)):
         if val:
             reachable.append(x[a])
         else:
@@ -413,7 +337,7 @@ def Kplus(element, x: list,lens: np.array, classes: np.array):
                 resort(tempLens)
 
     else:
-        return None, None, None, None, None
+        return None, None, [], [], None
     #make last card immediately playable    
     modClass[-1] = 1
     reachability[-1] = True
@@ -425,5 +349,5 @@ def Kplus(element, x: list,lens: np.array, classes: np.array):
             reachable.append(x[a])
         else:
             unreachable.append(x[a])
-
+            
     return x, lens, reachable, unreachable, modClass

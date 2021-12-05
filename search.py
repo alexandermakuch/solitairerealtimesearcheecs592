@@ -21,6 +21,8 @@ def opp_color_check(c1, c2):
 def get_actions(s):
     actions = []
     
+    
+    
     #See where Talon cards can be moved:
     for tal_idx, card in enumerate(s.reachable_talon):
         #Talon to tableau
@@ -30,7 +32,6 @@ def get_actions(s):
                      new_entry = {'from':[0, tal_idx], 'to':[1,tab_idx,0]}
                      actions.append(new_entry)
             elif card[1] == 13: #King
-                print("elif")
                 new_entry = {'from':[0,tal_idx], 'to':[1,tab_idx,0]}
                 actions.append(new_entry)
         #Talon to foundation
@@ -72,15 +73,17 @@ def get_actions(s):
                     new_entry = {'from':[1,stack_idx,stack_depth], 'to':[1,si2,0]}
                     actions.append(new_entry)
             #If next card in stack can't be moved, stop looping through stack
-            if stack_depth < len(stack[0])-1:
+            if stack_depth < len(stack[0])-2: #Only check ahead if not the last card in the stack
                 if stack[0][stack_depth+1][1] - stack[0][stack_depth][1] != 1: 
                     break
+            
                     
     
         #Tableau to foundation:
-        if stack[0]:
+        if stack[0]: #Make sure tableau stack isn't empty
             for found_idx, found_stack in enumerate(s.foundation):
                 if found_stack: #Verify it's not empty
+                    #If same suit and one number higher
                     if stack[0][0][0] == found_stack[0][0] and stack[0][0][1] - found_stack[0][1] == 1:
                         new_entry = {'from':[1,stack_idx,0], 'to':[2,found_idx]}
                         actions.append(new_entry)
@@ -115,6 +118,9 @@ def get_actions(s):
                     if stack[0][1] == 13:
                         new_entry = {'from':[2,stack_idx], 'to':[1,tab_idx,0]}
                         #actions.append(new_entry)
+    
+    #print('')
+    #print(actions)
     return actions
     #return prune_actions(s, actions)
 
@@ -346,9 +352,10 @@ def loop_check(s):
     return False
     
 #-----------------------------------------------------------------------------
-def cache_check(s,cache):
-    for entry in cache:
-        if s == entry:
+def cache_check(s,h, n):
+    
+    for idx, entry in enumerate(h.cache):
+        if s == entry and n == h.n_cache[idx]:
             return True
         
     return False
@@ -405,59 +412,53 @@ def faux_mns(s, H1, history):#,hs,ns,top_layer,path):
 
 
 
-def mns_rollout_enhanced(s, hs, ns, top_layer, path):
-    global i
-    print(i)
-    i+=1
-    print("working!")
-
+def mns_rollout_enhanced(s, hs, ns, layer, path):
     #s : Current state
     #hs : A list containing the heuristic functions
     #ns : A list containing the current nesting level for each heuristic 
     #top_layer : A boolean to check if this is the first call of the recurssive function
     #path : A list of all the states visited by the top layer
     
-    
+    print('Layer = ',layer)
     #Infinity = WIN, negative infinity = LOSS
     if hs[0].h(s) == float('inf'): return float('inf') #If win, instantly return
 
-    if loop_check(s): return 'LOSS'    
-
+    #if loop_check(s): return -float('inf') #If stuck, return a loss  
     
-    #i.e. no more levels of nesting and not dead end
+    '''
+    #Recurssion limit
+    if layer > 9:
+        print('Time to back off!')
+        print('Heuristic: ', hs[0].h(s))
+        return float('inf') 
+    '''
+    
+    #i.e. no more levels of nesting and is a dead end
     if not get_actions(s) and ns[0] == -1: 
         return hs[0].h(s)
     
-    if cache_check(s,hs[0].cache):
-        if len(hs) == 1:
-            return hs[0](s)
+    if cache_check(s,hs[0],ns[0]): #Check if already cached
+        if len(hs) == 1: #On last heuristic
+            return hs[0].h(s)
         else:
-            return mns_rollout_enhanced(s,hs[1:],ns[1:], False, path)
+            return mns_rollout_enhanced(s,hs[1:],ns[1:], layer+1, path)
         
-    while hs[0].h(s) != 'LOSS':
+    while hs[0].h(s) != -float('inf'):
+
         actions = get_actions(s)
-        '''
         actions = prune_actions(s, actions)
+
         if not actions: return -float('inf')
-        '''
-
-        if not actions:
-            return -float('inf')
-        # else:
-        #     best_a = 0
-
-
 
         best_val = -float('inf') #Initialize as a loss
         for act in actions:
             new_n = ns.copy()
             new_n[0] -= 1
-            val = mns_rollout_enhanced(s, hs, new_n, False, path)
+            val = mns_rollout_enhanced(result(s.copy(),act), hs, new_n, layer+1, path)
             
             if val > best_val:
                 best_val = val
                 best_a = act
-                print("best action", best_a)
                     
         if best_val == float('inf'): #WIN
             return float('inf')
@@ -465,16 +466,21 @@ def mns_rollout_enhanced(s, hs, ns, top_layer, path):
         #If LOSS or local maxima found when not on last heuristic
         if best_val == -float('inf') or (len(hs) != 0 and best_val < hs[0].h(s)):
             if len(hs)==1: return hs[0].h(s) #On last heuristic
-            else: return mns_rollout_enhanced(s,hs[1:],ns[1:], False, path)
+            else: return mns_rollout_enhanced(s,hs[1:],ns[1:], layer+1, path)
         
-            
-        s = result(s,best_a)
         if ns[0] != 0 and len(hs[0].cache) < 5000: #Only cache at non-zero nesting levels
             hs[0].cache.append(s) #Appends to appropriate heuristic
-            hs[0].n.append(ns[0]) #Save nesting level of heuristic
+            hs[0].n_cache.append(ns[0]) #Save nesting level of heuristic
+        
+        
+        s = result(s.copy(),best_a)
+        
                     
-        if top_layer:
+        if layer == 1:
             path.append(s)
+            
+    if layer == 1:
+        return path
 
             
 #-----------------------------------------------------------------------------
@@ -487,7 +493,7 @@ def reveal_face_down(s: State, a: dict):
     Function should only be called when the 'from' key of the action == 1 (when we are moving from the tableau)
     '''
 
-    sprime = result(s,a)
+    sprime = result(s.copy(),a)
 
     for tab_idx in range(len(s.tableau)):
         s_tableau_stack = s.tableau[tab_idx]
@@ -535,7 +541,6 @@ def KingToTableau(s: State, a: dict):
     if a['from'][0] == 1: #moving King from tableau to tableau
         tableau_stack_idx = a['from'][1]
         card_idx = a['from'][2]
-
         card = s.tableau[tableau_stack_idx][0][card_idx]
         if card[1] != 13: #not a King
             return True
@@ -571,7 +576,7 @@ def KingToTableau(s: State, a: dict):
 #1: tableau, 0-6, the depth of cards to move starting at 0 (relevant for tableau to tableau)
 #2: foundation, 0-3 for the foundation stack
 
-def prune_actions(s: State, possible_actions):
+def prune_actions(s, possible_actions):
     '''
     Inputs: current state s and list of possible actions in state s
     Output: the best actions as a dictionary
@@ -595,26 +600,27 @@ def prune_actions(s: State, possible_actions):
     a07_actions = [] #all other actions. Just to check but this should never happen.
 
     for action in possible_actions:
-
         card = None
         if action['from'][0] == 1: #moving from tableau
             tableau_stack_idx = action['from'][1]
             card_idx = action['from'][2]
             card = s.tableau[tableau_stack_idx][0][card_idx]
+                
         elif action['from'][0] == 0: #moving from talon
             card_idx = action['from'][1]
             card = s.reachable_talon[card_idx]
         elif action['from'][0] == 2: #moving from foundation
             foundation_stack_idx = action['from'][1]
             card = s.foundation[foundation_stack_idx][-1]
-
-        if (action['from'][0] == 1) and (action['to'][0] == 2) and (reveal_face_down(s,action)): #action that moves card from tableau to foundation and reveals a face down card
+#--------------------------------------------------------------------------------     
+        if (action['from'][0] == 1) and (action['to'][0] == 2) and (reveal_face_down(s.copy(),action)): #action that moves card from tableau to foundation and reveals a face down card
             a01_actions.append(action)
         
         elif action['to'][0] == 2: #action that moves card to foundation
             a02_actions.append(action)
         
-        elif (action['from'][0] == 1) and (action['to'][0] == 1) and (reveal_face_down(s,action)): #action that moves card from tableau to tableau and reveals a face down card
+        elif (action['from'][0] == 1) and (action['to'][0] == 1) and (reveal_face_down(s.copy(),action)): #action that moves card from tableau to tableau and reveals a face down card
+            
             if (card[1] == 13): #card being moved is a King
                 if (KingToTableau(s,action)):
                     a03_actions.append(action)
@@ -628,7 +634,7 @@ def prune_actions(s: State, possible_actions):
             else:
                 a04_actions.append(action)
 
-        elif (action['from'][0] == 2) and (action['to'][0] == 1) and (not(foundation_progression(s,action))): #action that moves card from foundation to tableau
+        elif (action['from'][0] == 2) and (action['to'][0] == 1) and (not(foundation_progression(s.copy(),action))): #action that moves card from foundation to tableau
             if (card[1] == 13): #card being moved is a King
                 if (KingToTableau(s,action)):
                     a05_actions.append(action)

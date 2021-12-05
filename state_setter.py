@@ -33,20 +33,20 @@ def state_setter(file='C:/Users/jacob/Documents/Classes/EECS592/test_state_11_26
                     break
     
     
-    
+#-------------------------------------------------------------------------------------------------------    
     #Read stock
-    stock = []
+    stock = deque()
     if rows[1][0] != '':
         for i in range(int(len(rows[1]) / 2)):
-            stock.append([rows[1][2*i], rows[1][2*i + 1]])
+            stock.append([rows[1][2*i + 1], int(rows[1][2*i])])
         
-    
+#-------------------------------------------------------------------------------------------------------      
     #Read talon (line 4)
     talon = []
     if rows[4][0] != '':
         for i in range(int(len(rows[4]) / 2)):
-            talon.append([rows[4][2*i], rows[4][2*i + 1]])
-    
+            talon.append([rows[4][2*i + 1], int(rows[4][2*i])])
+#-------------------------------------------------------------------------------------------------------      
     #Read foundation (lines 7-16)
     foundation1 = deque() #for spades
     foundation2 = deque() #for clubs
@@ -60,9 +60,9 @@ def state_setter(file='C:/Users/jacob/Documents/Classes/EECS592/test_state_11_26
         if rows[stack_idx][0] != '':
             for i in range(int(len(rows[stack_idx]) / 2)):
     
-                foundation[found_num].append([rows[stack_idx][2*i], rows[stack_idx][2*i + 1]])
+                foundation[found_num].append([rows[stack_idx][2*i + 1], int(rows[stack_idx][2*i])])
     
-    
+#-------------------------------------------------------------------------------------------------------      
     #Read tableau
     tab1 = [deque(), deque()]
     tab2 = [deque(), deque()]
@@ -81,7 +81,7 @@ def state_setter(file='C:/Users/jacob/Documents/Classes/EECS592/test_state_11_26
             if len(rows[stack_idx]) % 2 == 0: #All faceup tableau stack
             
                 for i in range(int(len(rows[stack_idx]) / 2)):
-                    tableau[tab_num][0].append([rows[stack_idx][2*i], rows[stack_idx][2*i + 1]])
+                    tableau[tab_num][0].append([ rows[stack_idx][2*i + 1], int(rows[stack_idx][2*i])])
     
                     
             else: #Some facedown cards
@@ -93,10 +93,10 @@ def state_setter(file='C:/Users/jacob/Documents/Classes/EECS592/test_state_11_26
                             flipped = True
                             i = i*2 + 1
                         else: #Append to faceup deque
-                            tableau[tab_num][0].append([rows[stack_idx][2*i], rows[stack_idx][2*i + 1]])
+                            tableau[tab_num][0].append([rows[stack_idx][2*i + 1], int(rows[stack_idx][2*i])])
                             i += 1
                     else: #Append to facedown deque
-                        tableau[tab_num][1].append([rows[stack_idx][i], rows[stack_idx][i + 1]])
+                        tableau[tab_num][1].append([rows[stack_idx][i + 1], int(rows[stack_idx][i])])
                         i += 2
 
     return [stock, foundation, tableau]

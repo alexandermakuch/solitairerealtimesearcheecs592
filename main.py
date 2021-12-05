@@ -19,18 +19,35 @@ def main():
     #print(len(deck))
 
     #initialize the game by partitioning the deck
-    random_game = True
+    random_game = False
     if random_game:
         tableau = deckGenerator.tableauGen(deck)
         foundation = deckGenerator.foundationGen()
         stock = deckGenerator.StockGen(deck)
+        tile_length = 8
+        print(stock)
+        print('')
+        print(foundation)
+        print('')
+        print(tableau)
         
     else:
         stock,foundation,tableau = state_setter()
-        
-    lens= np.array([3,3,3,3,3,3,3,3])
-    classes = np.tile(np.array([0,0,1]),8)
-    reachable_talon, unreachable_talon = initKplus(stock)
+        tile_length = 7
+        '''
+        print(stock)
+        print('')
+        print(foundation)
+        print('')
+        print(tableau)
+        '''
+    
+    lens = np.ones(tile_length)
+    lens = 3*lens
+    lens = lens.astype(int)
+    #lens= np.array([3,3,3,3,3,3,3,3])
+    classes = np.tile(np.array([0,0,1]),tile_length)
+    reachable_talon, unreachable_talon = initKplus(stock, tile_length)
 
     s0 = State(tableau, foundation, reachable_talon, unreachable_talon, stock, lens, classes)
 
@@ -42,15 +59,15 @@ def main():
         raise ValueError("ERROR Initializing: cards are not unique")
     #--------------------------------------------------------------------------------
 
-    H1 = HeuristicH1(1)
-    H2 = HeuristicH2(1)
+    H1 = HeuristicH1(0)
+    H2 = HeuristicH2(0)
     hs = [H1,H2]
     ns = [H1.nestingLevel, H2.nestingLevel]
     history = deque([])
-    print(faux_mns(s0, H1, history))
-    #mns_rollout_enhanced(s0,hs,ns,True,[])
+    #print(faux_mns(s0, H1, history))
+    mns_rollout_enhanced(s0,hs,ns,1,[])
     print("not broken")
-    gui.initGame(s0.reachable_talon,s0.unreachable_talon,s0.foundation,s0.tableau)
+    #gui.initGame(s0.reachable_talon,s0.unreachable_talon,s0.foundation,s0.tableau)
     #mns_rollout_enhanced(s0, hs, ns, top_layer=True, path=[])
 
     #--------------------------------------------------------------------------------
