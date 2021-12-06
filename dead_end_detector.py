@@ -4,7 +4,7 @@ from collections import deque
 from search import faux_mns
 import numpy as np
 import pickle
-from heuristics import HeuristicH2
+from heuristics import HeuristicH1, HeuristicH2
 import gui
 NEW_STATE = False
 
@@ -26,8 +26,17 @@ s0 = pickle.load(file)
 file.close()
 
 history = []
+H1 = HeuristicH1(1)
+H2 = HeuristicH2(1)
+slist = []
+print(faux_mns(s0, H2, history, slist))
 
 
-H1 = HeuristicH2(1)
-print(faux_mns(s0, H1, history))
+ 
+
+file = open('stateList','wb')
+pickle.dump(slist, file)
+file.close()
+print(len(slist))
+
 gui.initGame(s0.reachable_talon, s0.unreachable_talon, s0.foundation, s0.tableau)

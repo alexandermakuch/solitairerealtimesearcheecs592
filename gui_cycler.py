@@ -3,13 +3,14 @@ Solitaire clone: From python arcade wiki https://api.arcade.academy/en/latest/tu
 """
 
 from collections import deque
+from os import stat
 import time
 
 import deckGenerator
 from deckGenerator import State, initKplus
 import numpy as np
 import arcade
-
+import pickle
 from typing import Optional
 
 """
@@ -22,50 +23,50 @@ unreachable_talon = deque([...........................])
 reachable_talon = deque([...........................])
 s0 = State(tableau, foundation, reachable_talon, unreachable_talon, stock, lens, classes)
 
-"""
+# """
 
-deck = deckGenerator.deckGen()
-tableau = deckGenerator.tableauGen(deck)
-foundation = deckGenerator.foundationGen()
-stock = deckGenerator.StockGen(deck)
-lens= np.array([3,3,3,3,3,3,3,3])
-classes = np.tile(np.array([0,0,1]),8)
-reachable_talon, unreachable_talon = initKplus(stock)
-s0 = State(tableau, foundation, reachable_talon, unreachable_talon, stock, lens, classes)
+# deck = deckGenerator.deckGen()
+# tableau = deckGenerator.tableauGen(deck)
+# foundation = deckGenerator.foundationGen()
+# stock = deckGenerator.StockGen(deck)
+# lens= np.array([3,3,3,3,3,3,3,3])
+# classes = np.tile(np.array([0,0,1]),8)
+# reachable_talon, unreachable_talon = initKplus(stock)
+# s0 = State(tableau, foundation, reachable_talon, unreachable_talon, stock, lens, classes)
 
-deck = deckGenerator.deckGen()
-tableau = deckGenerator.tableauGen(deck)
-foundation = deckGenerator.foundationGen()
-stock = deckGenerator.StockGen(deck)
-lens= np.array([3,3,3,3,3,3,3,3])
-classes = np.tile(np.array([0,0,1]),8)
-reachable_talon, unreachable_talon = initKplus(stock)
-s1 = State(tableau, foundation, reachable_talon, unreachable_talon, stock, lens, classes)
+# deck = deckGenerator.deckGen()
+# tableau = deckGenerator.tableauGen(deck)
+# foundation = deckGenerator.foundationGen()
+# stock = deckGenerator.StockGen(deck)
+# lens= np.array([3,3,3,3,3,3,3,3])
+# classes = np.tile(np.array([0,0,1]),8)
+# reachable_talon, unreachable_talon = initKplus(stock)
+# s1 = State(tableau, foundation, reachable_talon, unreachable_talon, stock, lens, classes)
 
-deck = deckGenerator.deckGen()
-tableau = deckGenerator.tableauGen(deck)
-foundation = deckGenerator.foundationGen()
-stock = deckGenerator.StockGen(deck)
-lens= np.array([3,3,3,3,3,3,3,3])
-classes = np.tile(np.array([0,0,1]),8)
-reachable_talon, unreachable_talon = initKplus(stock)
-s2 = State(tableau, foundation, reachable_talon, unreachable_talon, stock, lens, classes)
+# deck = deckGenerator.deckGen()
+# tableau = deckGenerator.tableauGen(deck)
+# foundation = deckGenerator.foundationGen()
+# stock = deckGenerator.StockGen(deck)
+# lens= np.array([3,3,3,3,3,3,3,3])
+# classes = np.tile(np.array([0,0,1]),8)
+# reachable_talon, unreachable_talon = initKplus(stock)
+# s2 = State(tableau, foundation, reachable_talon, unreachable_talon, stock, lens, classes)
 
-deck = deckGenerator.deckGen()
-tableau = deckGenerator.tableauGen(deck)
-foundation = deckGenerator.foundationGen()
-stock = deckGenerator.StockGen(deck)
-lens= np.array([3,3,3,3,3,3,3,3])
-classes = np.tile(np.array([0,0,1]),8)
-reachable_talon, unreachable_talon = initKplus(stock)
-s3 = State(tableau, foundation, reachable_talon, unreachable_talon, stock, lens, classes)
+# deck = deckGenerator.deckGen()
+# tableau = deckGenerator.tableauGen(deck)
+# foundation = deckGenerator.foundationGen()
+# stock = deckGenerator.StockGen(deck)
+# lens= np.array([3,3,3,3,3,3,3,3])
+# classes = np.tile(np.array([0,0,1]),8)
+# reachable_talon, unreachable_talon = initKplus(stock)
+# s3 = State(tableau, foundation, reachable_talon, unreachable_talon, stock, lens, classes)
 
 
-stateList = []
-stateList.append(s0)
-stateList.append(s1)
-stateList.append(s2)
-stateList.append(s3)
+# stateList = []
+# stateList.append(s0)
+# stateList.append(s1)
+# stateList.append(s2)
+# stateList.append(s3)
 
 
 new_reachable_talon = deque([])
@@ -121,13 +122,17 @@ def load_stacks(reachable_talon, unreachable_talon, foundation, tableau):
     return new_reachable_talon, new_unreachable_talon, new_foundation, new_tableau
 
 guiList = []
-
+file = open('stateList','rb')
+stateList = pickle.load(file)
+file.close()
+print(stateList)
 for state in stateList:
     nrt, nurt, nf, nt = load_stacks(state.reachable_talon, state.unreachable_talon, state.foundation, state.tableau)
     guiList.append(GUIstate(nrt, nurt, nf, nt))
 
 index = 0
 maxIndex = len(guiList)
+print(stateList[0] == stateList[15])
 
 
 # Screen title and size
