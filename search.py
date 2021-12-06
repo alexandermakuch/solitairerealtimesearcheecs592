@@ -552,9 +552,15 @@ def KingToTableau(s: State, a: dict):
     
     multiple_empty_tableau_stacks = False
     empty_tableau_stacks_count = 0
+    tab_idx = 0
+    leftmost_empty_stack = -1
     for tableau_stack in s.tableau:
         if len(tableau_stack[0]) == 0: #there are no face up cards in this stack so it must be empty
+            if leftmost_empty_stack == -1:
+                leftmost_empty_stack = tab_idx
             empty_tableau_stacks_count += 1
+            tab_idx += 1
+
     if empty_tableau_stacks_count >= 2:
         multiple_empty_tableau_stacks = True
 
@@ -562,7 +568,7 @@ def KingToTableau(s: State, a: dict):
         return True
 
     tableau_to_stack_idx = a['to'][1]
-    if tableau_to_stack_idx == 0:
+    if tableau_to_stack_idx == leftmost_empty_stack:
         return True
 
     return False
