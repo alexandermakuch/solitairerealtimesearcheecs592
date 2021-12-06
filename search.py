@@ -30,7 +30,6 @@ def get_actions(s):
                      new_entry = {'from':[0, tal_idx], 'to':[1,tab_idx,0]}
                      actions.append(new_entry)
             elif card[1] == 13: #King
-                print("elif")
                 new_entry = {'from':[0,tal_idx], 'to':[1,tab_idx,0]}
                 actions.append(new_entry)
         #Talon to foundation
@@ -42,13 +41,13 @@ def get_actions(s):
             else: #No cards in foundation stack
                 if card[1] == 1: #is ace
                     if found_idx == 0:
-                        suit = 'D'
+                        suit = 'S'
                     elif found_idx == 1:
                         suit = 'C'
                     elif found_idx == 2:
                         suit = 'H'
                     elif found_idx == 3:
-                        suit = 'S'
+                        suit = 'D'
                     
                     if card[0] == suit: #Matchs stack suit
                         new_entry = {'from':[0,tal_idx], 'to':[2,found_idx]}
@@ -87,13 +86,13 @@ def get_actions(s):
                 else: #Empty foundation stack
                     if stack[0][0][1] == 1: #Is ace
                         if found_idx == 0:
-                            suit = 'D'
+                            suit = 'S'
                         elif found_idx == 1:
                             suit = 'C'
                         elif found_idx == 2:
                             suit = 'H'
                         elif found_idx == 3:
-                            suit = 'S'
+                            suit = 'D'
                         
                     
                         if stack[0][0][0] == suit: #Matchs stack suit
@@ -116,7 +115,7 @@ def get_actions(s):
                         new_entry = {'from':[2,stack_idx], 'to':[1,tab_idx,0]}
                         #actions.append(new_entry)
     return actions
-    #return prune_actions(s, actions)
+    #return prune_actions(s.copy(), actions)
 
 def result(s1: State,a: dict):
     '''
@@ -255,16 +254,15 @@ def detectUnwinnable(s): #need state from result(s,a) for each possible action r
 
     return detectUnwinnable
 
-
+tableauWin, foundationWin, reachable_talonWin, unreachable_talonWin, stockWin, lensWin, classesWin = winGen()
+sWin = State(tableauWin, foundationWin, reachable_talonWin, unreachable_talonWin, stockWin, lensWin, classesWin)
 
 def win(s):
     '''
     check if the passed in state s is a win state
     '''
     #recreate win state for comparison
-    tableauWin, foundationWin, reachable_talonWin, unreachable_talonWin, stockWin, lensWin, classesWin = winGen()
-    sWin = State(tableauWin, foundationWin, reachable_talonWin, unreachable_talonWin, stockWin, lensWin, classesWin)
-        
+    global sWin
     if s == sWin:
         return True
     else:
@@ -301,10 +299,6 @@ def mns_rollout(s, hs, ns, a):
                 new_n = ns.copy()
                 new_n[0] -= 1
                 xx = result(s,act)
-                if xx in actions11:
-                    print("loop!")
-                else:
-                    print(actions11)
                 val = mns_rollout(xx, hs, new_n, act)
                 actions11.append(xx)
 
@@ -330,21 +324,6 @@ def mns_rollout(s, hs, ns, a):
             #implement way to store the path we take
             
     return hs[0](s)
-
-def loop_check(s):
-    '''
-    Needed: what data structure will the cached states be in?
-    Also, how is "nesting level" of current state determined?
-    '''
-
-    for cached in HeuristicH1.cache:
-        if State.__eq__(s,cached): 
-            return True
-    for cached in HeuristicH2.cache:
-        if State.__eq__(s,cached): 
-            return True
-    return False
-    
 #-----------------------------------------------------------------------------
 def cache_check(s,cache):
     for entry in cache:
@@ -369,47 +348,57 @@ def loopChecker(a, b):
     return not unmatched
 
 gd5 = 0
-from actions import get_actions_supreme
-def faux_mns(s, H1, history):#,hs,ns,top_layer,path):
+def faux_mns(s, H1, history, slist):#,hs,ns,top_layer,path):
     global gd5
     gd5 += 1
-    #while s is not a dead-end or win
-    actions, history = get_actions_supreme(s, history)
-    # actions12.append(actions)
-    # if len(actions12) > 10:
-    #     print(actions12)
-    #     for b in actions12[-5:]:
-    #             if loopChecker(actions,b):
-    #                 print('Loop')
-    #                 return False
-
-
+    action = get_actions(s)
+    actions = prune_actions_loop(s,action,history)
     if win(s):
         return 'Win'
-    elif actions == None:
+    if actions == []:
         return 'Dead End'
     else:
-        while gd5 < 100:
+        while gd5 < 170 and actions:
             heuristic_values = np.zeros(len(actions))
             for x in range(len(actions)):
                 s1 = s.copy()
-                #print(actions[x])
                 heuristic_values[x] = H1.h(result(s1, actions[x]))
                 if s1 == s:
                     print("bad copy")
-            #print(heuristic_values)
             best_action = np.argmax(heuristic_values)
-            print('Best action is {} with heuristic value of {}'.format(best_action, heuristic_values[best_action]))
-
-            faux_mns(result(s,actions[best_action]),H1, history)
+            #print('Best action is {} with heuristic value of {}'.format(best_action, heuristic_values[best_action]))
+            a = result(s.copy(),actions[best_action])
+            slist.append(a)
+            history.append(actions[best_action])
+            return faux_mns(result(s,actions[best_action]),H1, history, slist)
+gd5=0
+def faux_mns_strategy(s, H1, history, slist):#,hs,ns,top_layer,path):
+    global gd5
+    gd5 += 1
+    action = get_actions(s)
+    actions = strategy_prune_actions(s,action,history)
+    if win(s):
+        return 'Win'
+    if actions == []:
+        return 'Dead End'
+    else:
+        while gd5 < 170 and actions:
+            heuristic_values = np.zeros(len(actions))
+            for x in range(len(actions)):
+                s1 = s.copy()
+                heuristic_values[x] = H1.h(result(s1, actions[x]))
+                if s1 == s:
+                    print("bad copy")
+            best_action = np.argmax(heuristic_values)
+            #print('Best action is {} with heuristic value of {}'.format(best_action, heuristic_values[best_action]))
+            a = result(s.copy(),actions[best_action])
+            slist.append(a)
+            history.append(actions[best_action])
+            return faux_mns(result(s,actions[best_action]),H1, history, slist)
 
 
 
 def mns_rollout_enhanced(s, hs, ns, top_layer, path):
-    global i
-    print(i)
-    i+=1
-    print("working!")
 
     #s : Current state
     #hs : A list containing the heuristic functions
@@ -457,7 +446,6 @@ def mns_rollout_enhanced(s, hs, ns, top_layer, path):
             if val > best_val:
                 best_val = val
                 best_a = act
-                print("best action", best_a)
                     
         if best_val == float('inf'): #WIN
             return float('inf')
@@ -487,7 +475,7 @@ def reveal_face_down(s: State, a: dict):
     Function should only be called when the 'from' key of the action == 1 (when we are moving from the tableau)
     '''
 
-    sprime = result(s,a)
+    sprime = result(s.copy(),a)
 
     for tab_idx in range(len(s.tableau)):
         s_tableau_stack = s.tableau[tab_idx]
@@ -552,9 +540,15 @@ def KingToTableau(s: State, a: dict):
     
     multiple_empty_tableau_stacks = False
     empty_tableau_stacks_count = 0
+    tab_idx = 0
+    leftmost_empty_stack = -1
     for tableau_stack in s.tableau:
         if len(tableau_stack[0]) == 0: #there are no face up cards in this stack so it must be empty
+            if leftmost_empty_stack == -1:
+                 leftmost_empty_stack = tab_idx
             empty_tableau_stacks_count += 1
+        tab_idx += 1
+
     if empty_tableau_stacks_count >= 2:
         multiple_empty_tableau_stacks = True
 
@@ -562,9 +556,8 @@ def KingToTableau(s: State, a: dict):
         return True
 
     tableau_to_stack_idx = a['to'][1]
-    if tableau_to_stack_idx == 0:
+    if tableau_to_stack_idx == leftmost_empty_stack:
         return True
-
     return False
 
 #0: talon, tal_idx is the index of the card you are moving from the reachable talon
@@ -580,7 +573,7 @@ def prune_actions(s: State, possible_actions):
     '''
 
     if len(possible_actions) == 1: #there is only one possible action
-        return possible_actions[0]
+        return [possible_actions[0]]
     
     if len(possible_actions) == 0: #there are no possible actions
         return []
@@ -640,11 +633,191 @@ def prune_actions(s: State, possible_actions):
                 if (KingToTableau(s,action)):
                     a06_actions.append(action)
             else:
+                
                 a06_actions.append(action)
 
         else:
             a07_actions.append(action) #all other actions
 
+    #best_val = -float('inf')
+    #best_act = None
+
+    if len(a01_actions) > 0:
+        # for action in a01_actions:
+        #     val = HEURISTIC(result(s,action)) #???How do we call heuristic? And how do we know which heuristic to use?
+        #     if  val > best_val:
+        #         best_val = val
+        #         best_act = action
+        # return best_act
+        return a01_actions
+
+    if len(a02_actions) > 0:
+        # for action in a02_actions:
+        #     val = HEURISTIC(result(s,action)) #???How do we call heuristic? And how do we know which heuristic to use?
+        #     if  val > best_val:
+        #         best_val = val
+        #         best_act = action
+        # return best_act
+        return a02_actions
+
+    if len(a03_actions) > 0:
+        # for action in a03_actions:
+        #     val = HEURISTIC(result(s,action)) #???How do we call heuristic? And how do we know which heuristic to use?
+        #     if  val > best_val:
+        #         best_val = val
+        #         best_act = action
+        # return best_act
+        
+        return a03_actions
+
+    if len(a04_actions) > 0:
+        # for action in a04_actions:
+        #     val = HEURISTIC(result(s,action)) #???How do we call heuristic? And how do we know which heuristic to use?
+        #     if  val > best_val:
+        #         best_val = val
+        #         best_act = action
+        # return best_act
+        return a04_actions
+
+    if len(a05_actions) > 0:
+        # for action in a05_actions:
+        #     val = HEURISTIC(result(s,action)) #???How do we call heuristic? And how do we know which heuristic to use?
+        #     if  val > best_val:
+        #         best_val = val
+        #         best_act = action
+        # return best_act
+        return a05_actions
+
+    if len(a06_actions) > 0:
+        # for action in a06_actions:
+        #     val = HEURISTIC(result(s,action)) #???How do we call heuristic? And how do we know which heuristic to use?
+        #     if  val > best_val:
+        #         best_val = val
+        #         best_act = action
+        # return best_act
+        return a06_actions
+
+    if len(a07_actions) > 0:
+        # for action in a07_actions:
+        #     val = HEURISTIC(result(s,action)) #???How do we call heuristic? And how do we know which heuristic to use?
+        #     if  val > best_val:
+        #         best_val = val
+        #         best_act = action
+        # return best_act
+        return a07_actions
+
+def prune_actions_loop(s, possible_actions, history):
+    '''
+    s, p_a are same as prune actions
+    history is history of actions
+    '''
+    '''
+    Inputs: current state s and list of possible actions in state s
+    Output: the best actions as a dictionary
+    Explanation: the best actions is based on action ordering from the paper. The heuristic is only used for tie-breaking, which is not done in this function.
+    TODO: additional ordering from strategy guide?
+    '''
+
+    if len(possible_actions) == 1: #there is only one possible action
+        return [possible_actions[0]]
+    
+    if len(possible_actions) == 0: #there are no possible actions
+        return []
+
+    
+    a01_actions = [] #actions that move a card from tableau to foundation and reveal a face down card
+    a02_actions = [] #actions that move a card to the foundation
+    a03_actions = [] #actions that move a card from tableau to tableau and reveal a face down card
+    a04_actions = [] #actions that move a card from the talon to the tableau
+    a05_actions = [] #actions that move a card from the foundation to the tableau
+    a06_actions = [] #actions that move a card from tableau to tableau and do not reveal a face down card
+    a07_actions = [] #all other actions. Just to check but this should never happen.
+
+    for action in possible_actions:
+
+        card = None
+        if action['from'][0] == 1: #moving from tableau
+            tableau_stack_idx = action['from'][1]
+            card_idx = action['from'][2]
+            card = s.tableau[tableau_stack_idx][0][card_idx]
+        elif action['from'][0] == 0: #moving from talon
+            card_idx = action['from'][1]
+            card = s.reachable_talon[card_idx]
+        elif action['from'][0] == 2: #moving from foundation
+            foundation_stack_idx = action['from'][1]
+            card = s.foundation[foundation_stack_idx][-1]
+
+        if (action['from'][0] == 1) and (action['to'][0] == 2) and (reveal_face_down(s,action)): #action that moves card from tableau to foundation and reveals a face down card
+            a01_actions.append(action)
+        
+        elif action['to'][0] == 2: #action that moves card to foundation
+            a02_actions.append(action)
+        
+        elif (action['from'][0] == 1) and (action['to'][0] == 1) and (reveal_face_down(s,action)): #action that moves card from tableau to tableau and reveals a face down card
+            if (card[1] == 13): #card being moved is a King
+                if (KingToTableau(s,action)):
+                    a03_actions.append(action)
+            else:
+                a03_actions.append(action)
+        
+        
+        elif (action['from'][0] == 0) and (action['to'][0] == 1): #action that moves card from talon to tableau
+            if (card[1] == 13): #card being moved is a King
+                if (KingToTableau(s,action)):
+                    a04_actions.append(action)
+            else:
+                a04_actions.append(action)
+
+        elif (action['from'][0] == 2) and (action['to'][0] == 1) and (not(foundation_progression(s,action))): #action that moves card from foundation to tableau
+            if (card[1] == 13): #card being moved is a King
+                if (KingToTableau(s,action)):
+                    a05_actions.append(action)
+            else:
+                a05_actions.append(action)
+
+        elif (action['from'][0] == 1) and (action['to'][0] == 1): #action that moves card from tableau to tableau and does not reveal a face down card
+            if (card[1] == 13): #card being moved is a King
+                if (KingToTableau(s,action)):
+                    a06_actions.append(action)
+            else:
+                
+                a06_actions.append(action)
+
+        else:
+            a07_actions.append(action) #all other actions
+    if len(history) > 4:
+        if history[-2] in a01_actions:
+            a01_actions.remove(history[-2])
+        if history[-2] in a02_actions:
+            a02_actions.remove(history[-2])
+        if history[-2] in a03_actions:
+            a03_actions.remove(history[-2])
+        if history[-2] in a04_actions:
+            a04_actions.remove(history[-2])
+        if history[-2] in a05_actions:
+            a05_actions.remove(history[-2])
+        if history[-2] in a06_actions:
+            a06_actions.remove(history[-2])
+        if history[-2] in a07_actions:
+            a07_actions.remove(history[-2])
+
+    if len(history) > 4:
+        if history[-3] in a01_actions:
+            a01_actions.remove(history[-3])
+        if history[-3] in a02_actions:
+            a02_actions.remove(history[-3])
+        if history[-3] in a03_actions:
+            a03_actions.remove(history[-3])
+        if history[-3] in a04_actions:
+            a04_actions.remove(history[-3])
+        if history[-3] in a05_actions:
+            a05_actions.remove(history[-3])
+        if history[-3] in a06_actions:
+            a06_actions.remove(history[-3])
+        if history[-3] in a07_actions:
+            a07_actions.remove(history[-3])
+
+    
     #best_val = -float('inf')
     #best_act = None
 
@@ -709,4 +882,157 @@ def prune_actions(s: State, possible_actions):
         #         best_val = val
         #         best_act = action
         # return best_act
+        return a07_actions
+
+def largest_fd_idx(s: State):
+    '''
+    Input: current state s
+    Output: the tableau stack indexes with the most face down cards
+    '''
+    max_fd_count = 0
+    largest_facedown_idxs = []
+    tab_idx = 0
+    for tableau_stack in s.tableau:
+        if len(tableau_stack[1]) > max_fd_count:
+            max_fd_count = len(tableau_stack[1])
+            largest_facedown_idxs = [tab_idx]
+        elif len(tableau_stack[1]) == max_fd_count:
+            largest_facedown_idxs.append(tab_idx)
+        tab_idx += 1
+
+    return largest_facedown_idxs
+
+
+def strategy_prune_actions(s: State, possible_actions, history):
+    '''
+    Inputs: current state s and list of possible actions in state s
+    Output: the best actions as a dictionary
+    Explanation: the best actions is based on action ordering from the strategy guide and our own intuition. The heuristic is only used for tie-breaking, which is not done in this function.
+    '''
+    
+    if len(possible_actions) == 1: #there is only one possible action
+        return [possible_actions[0]]
+    
+    if len(possible_actions) == 0: #there are no possible actions
+        return []
+
+    
+    a01_actions = [] #actions that move an Ace or 2 card from talon or tableau to foundation
+    a02_actions = [] #actions that move a card from tableau to foundation or to tableau and reveal a face down card from biggest pile(s) of face down cards
+    a03_actions = [] #actions that move a card to the foundation
+    a04_actions = [] #actions that move a card from the talon to the tableau
+    a05_actions = [] #actions that move a card from the foundation to the tableau
+    a06_actions = [] #actions that move a card from tableau to tableau and do not reveal a face down card
+    a07_actions = [] #all other actions. Just to check but this should never happen.
+
+    largest_facedown_idxs = largest_fd_idx(s) #the tableau_stack_idx(s) with the most face down cards
+    largest_facedown_count_sofar = -1
+
+    for action in possible_actions:
+
+        card = None
+        if action['from'][0] == 1: #moving from tableau
+            tableau_stack_idx = action['from'][1]
+            card_idx = action['from'][2]
+            card = s.tableau[tableau_stack_idx][0][card_idx]
+        elif action['from'][0] == 0: #moving from talon
+            card_idx = action['from'][1]
+            card = s.reachable_talon[card_idx]
+        elif action['from'][0] == 2: #moving from foundation
+            foundation_stack_idx = action['from'][1]
+            card = s.foundation[foundation_stack_idx][-1]
+
+        
+
+        if ((action['from'][0] == 0) or (action['from'][0] == 1)) and ((card[1] == 1) or (card[1] == 2)): #ace or 2 in talon or tableau that can move to the foundation
+            a01_actions.append(action)
+
+        elif (action['from'][0] == 1) and ((action['to'][0] == 2) or (action['to'][0] == 1)) and (reveal_face_down(s.copy(),action)): #action that moves card from tableau to foundation or to tableau and reveals a face down card
+            num_fd = len(s.tableau[tableau_stack_idx][1])
+            if num_fd > largest_facedown_count_sofar:
+                largest_facedown_count_sofar = num_fd
+                a02_actions = [action] #prioritize actions that reveal a card from a stack with more face down cards
+            elif num_fd == largest_facedown_count_sofar:
+                a02_actions.append(action)
+
+        elif action['to'][0] == 2: #action that moves card to foundation
+            a03_actions.append(action)
+           
+        elif (action['from'][0] == 0) and (action['to'][0] == 1): #action that moves card from talon to tableau
+            if (card[1] == 13): #card being moved is a King
+                if (KingToTableau(s,action)): #if multiple empty stacks, the King should move to the leftmost stack (stack 0)
+                    a04_actions.append(action)
+            else:
+                a04_actions.append(action)
+
+        elif (action['from'][0] == 2) and (action['to'][0] == 1) and (not(foundation_progression(s.copy(),action))): #action that moves card from foundation to tableau
+            if (card[1] == 13): #card being moved is a King
+                if (KingToTableau(s,action)):
+                    a05_actions.append(action)
+            else:
+                a05_actions.append(action)
+
+        elif (action['from'][0] == 1) and (action['to'][0] == 1): #action that moves card from tableau to tableau and does not reveal a face down card
+            if (card[1] == 13): #card being moved is a King
+                if (KingToTableau(s,action)):
+                    a06_actions.append(action)
+            else:
+                a06_actions.append(action)
+
+        else:
+            a07_actions.append(action) #all other actions
+
+
+    if len(history) > 4:
+        if history[-2] in a01_actions:
+            a01_actions.remove(history[-2])
+        if history[-2] in a02_actions:
+            a02_actions.remove(history[-2])
+        if history[-2] in a03_actions:
+            a03_actions.remove(history[-2])
+        if history[-2] in a04_actions:
+            a04_actions.remove(history[-2])
+        if history[-2] in a05_actions:
+            a05_actions.remove(history[-2])
+        if history[-2] in a06_actions:
+            a06_actions.remove(history[-2])
+        if history[-2] in a07_actions:
+            a07_actions.remove(history[-2])
+
+    if len(history) > 4:
+        if history[-3] in a01_actions:
+            a01_actions.remove(history[-3])
+        if history[-3] in a02_actions:
+            a02_actions.remove(history[-3])
+        if history[-3] in a03_actions:
+            a03_actions.remove(history[-3])
+        if history[-3] in a04_actions:
+            a04_actions.remove(history[-3])
+        if history[-3] in a05_actions:
+            a05_actions.remove(history[-3])
+        if history[-3] in a06_actions:
+            a06_actions.remove(history[-3])
+        if history[-3] in a07_actions:
+            a07_actions.remove(history[-3])
+
+    
+    if len(a01_actions) > 0:
+        return a01_actions
+
+    if len(a02_actions) > 0:
+        return a02_actions
+
+    if len(a03_actions) > 0:
+        return a03_actions
+
+    if len(a04_actions) > 0:
+        return a04_actions
+
+    if len(a05_actions) > 0:
+        return a05_actions
+
+    if len(a06_actions) > 0:
+        return a06_actions
+
+    if len(a07_actions) > 0:
         return a07_actions

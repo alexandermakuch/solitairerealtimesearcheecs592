@@ -171,7 +171,6 @@ class HeuristicH2:
             for card in foundation_stack:
                 deck.append(card)
                 foundation_all.append(card)
-        
         for card in reachable_talon:
             deck.append(card)
 
@@ -343,7 +342,7 @@ class HeuristicH3:
                 #if counterpart in tableau_face_down: #number 4 in table 1
                 #    h3 = -1
 
-                for tab_idx, tableau_stack in tableau:
+                for tab_idx, tableau_stack in enumerate(tableau):
                     if (card in tableau_stack[1]) and tab_idx == 0:
                         h3 = (card[1] - 1) - 13 - tab0_count
                         tab0_count = tab0_count + 1

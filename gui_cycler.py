@@ -24,7 +24,7 @@ reachable_talon = deque([...........................])
 s0 = State(tableau, foundation, reachable_talon, unreachable_talon, stock, lens, classes)
 
 # """
-
+play = 0
 # deck = deckGenerator.deckGen()
 # tableau = deckGenerator.tableauGen(deck)
 # foundation = deckGenerator.foundationGen()
@@ -125,14 +125,12 @@ guiList = []
 file = open('stateList','rb')
 stateList = pickle.load(file)
 file.close()
-print(stateList)
 for state in stateList:
     nrt, nurt, nf, nt = load_stacks(state.reachable_talon, state.unreachable_talon, state.foundation, state.tableau)
     guiList.append(GUIstate(nrt, nurt, nf, nt))
 
 index = 0
 maxIndex = len(guiList)
-print(stateList[0] == stateList[15])
 
 
 # Screen title and size
@@ -357,7 +355,8 @@ class MyGame(arcade.Window):
         """ User presses key """
         if symbol == arcade.key.R:
             # Restart
-            self.close()
+            global play
+            play +=1
 
         if symbol == arcade.key.LEFT:
             print("left")
@@ -376,43 +375,14 @@ class MyGame(arcade.Window):
 
     def on_update(self, delta_time: float):
         global index, guiList, new_foundation, new_reachable_talon, new_tableau, new_unreachable_talon
-
         new_reachable_talon, new_unreachable_talon, new_foundation, new_tableau = guiList[index].new_reachable_talon,  guiList[index].new_unreachable_talon, guiList[index].new_foundation, guiList[index].new_tableau
         self.setup2()
         self.card_list.update()
-        
-        # def faux_mns(s, H1):#,hs,ns,top_layer,path):
-        #     #while s is not a dead-end or win
-        #     actions = get_actions(s)
-        #     if win(s):
-        #         return 'Win'
-        #     elif not actions:
-        #         return 'Dead End'
-        #     else:
-        #         heuristic_values = np.zeros(len(actions))
-        #         for x in range(len(actions)):
-        #             s1 = s.copy()
-        #             heuristic_values[x] = H1.h(result(s1, actions[x]))
-        #             if s1 == s:
-        #                 print("bad copy")
-                
-        #         best_action = np.argmin(heuristic_values)
-        #         print('Best action is {} with heuristic value of {}'.format(best_action, heuristic_values[best_action]))
-
-        #         s1=s.copy()
-        #         s1 = result(s1, actions[best_action])
-
-        #         return s1
-        
-        
-        # H1 = HeuristicH1(1)
-        # while 1>0:
-        #     time.sleep(1)
-        #     s0=faux_mns(s0, H1)
-        #     new_reachable_talon, new_unreachable_talon, new_foundation, new_tableau= load_stacks(s0.reachable_talon, s0.unreachable_talon, s0.foundation, s0.tableau)
-        #     self.setup2()
-        #     self.card_list.update()
-        
+        #time.sleep(0.037008047103881836/76)
+        global play
+        if play > 0:
+            if index < maxIndex-1:
+                index += 1
 
         
 

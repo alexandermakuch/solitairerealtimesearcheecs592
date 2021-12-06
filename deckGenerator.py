@@ -320,7 +320,7 @@ def winGen():
                 foundation4.append([i,j])
     
     Foundation = [foundation1,foundation2,foundation3,foundation4]
-
+    print(Foundation)
 
     return Tableau, Foundation, Reachable_Talon, Unreachable_Talon, stock, lens, classes
 
