@@ -1,101 +1,151 @@
-from collections import deque
 import deckGenerator
-from heuristics import HeuristicH1, HeuristicH2
-from deckGenerator import State, Kplus, initKplus
-from search import detectUnwinnable, faux_mns, get_actions, prune_actions, result
-from search import mns_rollout_enhanced
-from state_setter import state_setter
-import copy
+from deckGenerator import State
+from search import faux_mns, faux_mns_strategy
 import numpy as np
-import sys
-import gui
-sys.setrecursionlimit(2700)
+import pickle
+from heuristics import HeuristicH1, HeuristicH2, HeuristicH3
+import gui_cycler
+import time
+import os
 
 
-def main():
-    #Generate a random deck of cards
+
+def newState():
+    file = open('important','wb')
     deck = deckGenerator.deckGen()
-    #print(deck)
-    #print(len(deck))
-
-    #initialize the game by partitioning the deck
-    random_game = True
-    if random_game:
-        tableau = deckGenerator.tableauGen(deck)
-        foundation = deckGenerator.foundationGen()
-        stock = deckGenerator.StockGen(deck)
-        
-    else:
-        stock,foundation,tableau = state_setter()
-        
-    lens= np.array([3,3,3,3,3,3,3,3])
-    classes = np.tile(np.array([0,0,1]),8)
-    reachable_talon, unreachable_talon = initKplus(stock)
-
-    s0 = State(tableau, foundation, reachable_talon, unreachable_talon, stock, lens, classes)
-
-    #s0.printDeck()
-
-
-    unique = s0.isUniqueStacks()
-    if not unique:
-        raise ValueError("ERROR Initializing: cards are not unique")
-    #--------------------------------------------------------------------------------
-
-    H1 = HeuristicH1(1)
-    H2 = HeuristicH2(1)
-    hs = [H1,H2]
-    ns = [H1.nestingLevel, H2.nestingLevel]
-    history = deque([])
-    print(faux_mns(s0, H1, history))
-    #mns_rollout_enhanced(s0,hs,ns,True,[])
-    print("not broken")
-    gui.initGame(s0.reachable_talon,s0.unreachable_talon,s0.foundation,s0.tableau)
-    #mns_rollout_enhanced(s0, hs, ns, top_layer=True, path=[])
-
-    #--------------------------------------------------------------------------------
-    #UNCOMMENT below to get the results for get_actions()
-    #s1 = [] #to hold the corresponding states for the actions in a0
-    #a0_possible = [] #for a deepcopy of get_actions
-    #for a in a0: #a is a dictionary with keys of 'to' and 'from'
-    #    sprime = result(s0,a) #get the resulting state for this action
-    #    if not detectUnwinnable(sprime):
-    #        d2 = copy.deepcopy(a)
-    #        a0_possible.append(d2)
-    #        s1.append(sprime)
-
-    #now, a0_possible and s1 should hold the actions and resulting states that are not unwinnable
-    #next, we need to decide which action we will actually take depending on the heuristic
-
-
-    '''
-    #fabricated states to test detectUnwinnable(s)
     tableau = deckGenerator.tableauGen(deck)
     foundation = deckGenerator.foundationGen()
     stock = deckGenerator.StockGen(deck)
     lens= np.array([3,3,3,3,3,3,3,3])
     classes = np.tile(np.array([0,0,1]),8)
     reachable_talon, unreachable_talon = deckGenerator.initKplus(stock)
+    s0 = State(tableau, foundation, reachable_talon, unreachable_talon, stock, lens, classes)
+    pickle.dump(s0, file)
+    file.close()
 
-    tableau[6][0] = deque([['S', 12]])
-    tableau[6][1] = deque([['S', 2],['S', 5],['D', 13],['H', 7],['D', 5],['H', 13]])
 
-    suwtest = State(tableau, foundation, reachable_talon, unreachable_talon, stock, lens, classes)
-    #suwtest.printDeck()
 
-    print("Testing Unwinnable Case #1")
-    print(detectUnwinnable(suwtest)) #should be True
-
-    suwtest.tableau[6][0] = deque([['D', 10]])
-    suwtest.tableau[6][1] = deque([['H', 10],['H', 6],['C', 11],['D', 9],['S', 3],['H', 5]])
-
-    print("Testing Unwinnable Case #2")
-    print(detectUnwinnable(suwtest)) #should be True
-
-    print("Testing Unwinnable s0:")
-    print(detectUnwinnable(s0))
+fileList = []
+for filename in os.listdir("winnable_states"):
+    fileList.append(filename)
+def pruningTest(heuristic,state='random'):
     '''
+    heuristic: initialized heuristic
+    state: random for new state, or int 1-51 for known winnable
+    '''
+    '''
+    printed: num moves, win/loss, time (in seconds)
+    '''
+    if state=='random':
+        newState()
+        file = open('important', 'rb')
+        s0 = pickle.load(file)
+        file.close()
+    else: 
+        file = open('winnable_states/'+fileList[state],'rb')
+        s0 = pickle.load(file)
+        file.close()
 
+
+    history = []
+    slist1 = [s0.copy()]
+    abbb = time.time()
+    result = faux_mns(s0.copy(), heuristic, history, slist1)
+    time1= time.time()-abbb
+    if result == 'Win':
+        ans = 1
+    else:
+        ans = 0
+
+    history = []
+    slist2 = [s0.copy()]
+    abbb = time.time()
+    result = faux_mns_strategy(s0, heuristic, history, slist2)
+    time2 = time.time()-abbb
+    if result == 'Win':
+        ans2 = 1
+    else:
+        ans2 = 0
+    file = open('stateList', 'wb')
+    pickle.dump(slist2, file)
+    file.close()
+    fields=[len(slist1), time1, ans, len(slist2), time2, ans2]
+    print(fields)
+
+
+    print('Press right/left arrow keys to cycle through states, press R to play all to end')
+    gui_cycler.main()
+
+def heuristicTest(heuristic, state='random', pruning='original'):
+    '''
+    heuristic: initialized heuristic
+    state: random for new state, or int 1-51 for known winnable
+    pruning: 'original' for pruning from [2], 'proposed' for our proposed pruning
+    '''
+    '''
+    printed: num moves, win/loss, time (in seconds)
+    '''
+    if state=='random':
+        newState()
+        file = open('important', 'rb')
+        s0 = pickle.load(file)
+        file.close()
+    else: 
+        file = open('winnable_states/'+fileList[state],'rb')
+        s0 = pickle.load(file)
+        file.close()
+
+    if pruning=='original':
+        history = []
+        slist2 = [s0.copy()]
+        time1 = time.time()
+        result = faux_mns(s0, heuristic, history, slist2)
+        time2 = time.time()-time1
+        if result == 'Win':
+            ans2 = 1
+        else:
+            ans2 = 0
+        file = open('stateList', 'wb')
+        pickle.dump(slist2, file)
+        file.close()
+        fields=[len(slist2), ans2,time2]
+        print(fields)
+    elif pruning == 'proposed':
+        history = []
+        slist2 = [s0.copy()]
+        time1 = time.time()
+        result = faux_mns_strategy(s0, heuristic, history, slist2)
+        time2 = time.time()-time1
+        if result == 'Win':
+            ans2 = 1
+        else:
+            ans2 = 0
+        file = open('stateList', 'wb')
+        pickle.dump(slist2, file)
+        file.close()
+        fields=[len(slist2), ans2,time2]
+        print(fields)
+    else:
+        raise Exception('Illegal input to pruning') 
+
+    print('Press right/left arrow keys to cycle through states, press R to play all to end')
+    print('Please note this is not real time, it takes ~1.5 seconds to display all moves')
+    gui_cycler.main()
+
+
+
+
+
+
+'''
+Uncomment whichever heuristic you would like to run
+Set state to 'random' to generate new state, or int 1-51 for known winnable
+For heuristicTest, you can choose pruning, options are 'original' or 'proposed'
+'''
+# heuristic = HeuristicH1(1)
+# heuristic = HeuristicH2(1)
+heuristic = HeuristicH3(1)
 
 if __name__ == '__main__':
-    main()
+    pruningTest(heuristic, state=51)
+    #heuristicTest(heuristic)

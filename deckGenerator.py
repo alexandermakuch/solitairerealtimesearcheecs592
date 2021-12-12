@@ -121,7 +121,6 @@ class State:
             if (len(current_heart_cards) != 1) or (len(current_diamond_cards) != 1) or (len(current_spade_cards) != 1) or (len(current_club_cards) != 1):
                 isUnique = False
                 print("ERROR: The cards are not unique at value of ", value)
-                print(current_value_cards)
                 return isUnique
 
         
@@ -253,7 +252,6 @@ def isUniqueDeck(deck):
         if (len(current_heart_cards) != 1) or (len(current_diamond_cards) != 1) or (len(current_spade_cards) != 1) or (len(current_club_cards) != 1):
             isUnique = False
             print("ERROR: The cards are not unique at value of ", value)
-            print(current_value_cards)
             return isUnique
 
     
@@ -320,7 +318,6 @@ def winGen():
                 foundation4.append([i,j])
     
     Foundation = [foundation1,foundation2,foundation3,foundation4]
-    print(Foundation)
 
     return Tableau, Foundation, Reachable_Talon, Unreachable_Talon, stock, lens, classes
 
